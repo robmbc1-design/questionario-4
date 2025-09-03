@@ -1,34 +1,34 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Variáveis SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidas!");
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-exports.handler = async function(event, context) {
-    try {
-        const { data, error } = await supabase
-            .from('results')
-            .select('*');
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'GET') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
 
-        if (error) {
-            throw new Error(error.message);
-        }
+  try {
+    const { data, error } = await supabase
+      .from('questionario_resultados')
+      .select('*')
+      .order('id', { ascending: false });
 
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*' // Permite requisições de qualquer origem
-            },
-            body: JSON.stringify(data)
-        };
-    } catch (e) {
-        return {
-            statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ error: 'Erro ao buscar dados: ' + e.message })
-        };
+    if (error) {
+      console.error("Erro ao buscar dados no Supabase:", error);
+      return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
+
+    return { statusCode: 200, body: JSON.stringify(data) };
+
+  } catch (e) {
+    console.error("Erro interno:", e);
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+  }
 };
