@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // O Netlify irá ler essas variáveis de ambiente.
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY; // LINHA CORRIGIDA
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // ✅ corrigido
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -51,4 +51,5 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: 'Erro interno do servidor.' })
         };
     }
+
 };
