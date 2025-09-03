@@ -1,9 +1,9 @@
-// Arquivo: netlify/functions/saveResult.js
+﻿// Arquivo: netlify/functions/saveResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 // O Netlify irá ler essas variáveis de ambiente.
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseKey = process.env.SUPABASE_ANON_KEY; // LINHA CORRIGIDA
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
