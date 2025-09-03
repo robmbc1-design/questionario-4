@@ -1,15 +1,14 @@
 {
-  "name": "questionario2",
+  "name": "questionario-netlify-functions",
   "version": "1.0.0",
-  "description": "",
-  "main": "saveResult.js",
+  "description": "Netlify Functions for the Supabase questionnaire.",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@supabase/supabase-js": "^2.44.2"
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
