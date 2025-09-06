@@ -1,14 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Variáveis de ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service Role Key
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Variáveis SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidas!");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -18,28 +13,38 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
-    const { data: result, error } = await supabase
+    const { error } = await supabase
       .from('questionario_resultados')
-      .insert([{
-        name: data.name,
-        email: data.email,
-        profile: data.profile,
-        description: data.description,
-        totalScore: data.totalScore,
-        inovadorScore: data.inovadorScore,
-        executorScore: data.executorScore,
-        especialistaScore: data.especialistaScore
-      }]);
+      .insert([
+        {
+          name: data.name,
+          email: data.email,
+          profile: data.profile,
+          description: data.description,
+          totalScore: data.totalScore,
+          inovadorScore: data.inovadorScore,
+          executorScore: data.executorScore,
+          especialistaScore: data.especialistaScore,
+        }
+      ]);
 
     if (error) {
-      console.error("Erro ao salvar no Supabase:", error);
-      return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+      console.error("Erro no Supabase:", error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: error.message, details: error.details })
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: 'Dados salvos com sucesso!' }) };
-
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Dados salvos com sucesso!' })
+    };
   } catch (e) {
-    console.error("Erro interno:", e);
-    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+    console.error("Erro na função:", e);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Erro interno do servidor.' })
+    };
   }
 };
