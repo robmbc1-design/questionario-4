@@ -1,4 +1,14 @@
 [build]
+  # Não precisa de build step, só instala dependências
   command = "npm install"
   publish = "."
-  functions = "netlify/functions"
+
+  # Forçar Node 18 (necessário para supabase-js v2+)
+  environment = { NODE_VERSION = "18" }
+
+[functions]
+  # Usa esbuild para empacotar as funções
+  node_bundler = "esbuild"
+
+  # Mantém a lib supabase-js externa (não precisa rebundlar dentro da função)
+  external_node_modules = ["@supabase/supabase-js"]
