@@ -30,19 +30,19 @@ exports.handler = async (event) => {
 
   try {
     // Insere dados no Supabase
-    const { data: result, error } = await supabase
-      .from('questionario_resultados')
-      .insert([
-        {
-          name: data.name,
-          email: data.email,
-          profile: data.profile,
-          description: data.description,
-          totalScore: data.totalScore,
-          inovadorScore: data.inovadorScore,
-          executorScore: data.executorScore,
-          especialistaScore: data.especialistaScore,
-        }
+    const { error } = await supabase
+  .from('questionario_resultados')
+  .upsert([
+    {
+      name: data.name,
+      email: data.email,
+      profile: data.profile,
+      description: data.description,
+      totalScore: data.totalScore,
+      inovadorScore: data.inovadorScore,
+      executorScore: data.executorScore,
+      especialistaScore: data.especialistaScore,
+    }
       ]);
 
     if (error) {
@@ -67,3 +67,4 @@ exports.handler = async (event) => {
     };
   }
 };
+
