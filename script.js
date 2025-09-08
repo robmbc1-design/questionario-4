@@ -1,4 +1,4 @@
-﻿// Credenciais do recrutador para teste local.
+// Credenciais do recrutador para teste local.
 const recruiterUsername = 'rh@conectarh.com';
 const recruiterPassword = 'conectarh123';
 let isRecruiterProfile = false; // Variável para controlar o perfil de acesso
@@ -8,14 +8,10 @@ window.showScreen = function(screenId) {
     const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView'];
     screens.forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-            element.classList.add('hidden');
-        }
+        if (element) element.classList.add('hidden');
     });
     const targetElement = document.getElementById(screenId);
-    if (targetElement) {
-        targetElement.classList.remove('hidden');
-    }
+    if (targetElement) targetElement.classList.remove('hidden');
 }
 
 // Funções de navegação
@@ -60,7 +56,7 @@ window.startQuestionnaire = function(isRecruiter = false) {
     }
 }
 
-// Funções de Login e Resultados
+// Login do recrutador
 window.loginRecruiter = function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
@@ -75,18 +71,18 @@ window.loginRecruiter = function() {
     }
 }
 
+// Exibe todos os resultados
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsList = document.getElementById('resultsList');
-    
+
     try {
         const response = await fetch('/.netlify/functions/getAllResults');
-        if (!response.ok) {
-            throw new Error('Erro ao buscar os dados.');
-        }
+        if (!response.ok) throw new Error('Erro ao buscar os dados.');
 
-        const results = await response.json();
-        
+        let results = await response.json();
+        results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
         if (results.length === 0) {
             resultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado encontrado.</p>`;
             return;
@@ -137,11 +133,12 @@ window.shuffleQuestions = function() {
     });
 }
 
+// Submissão do questionário
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
 
-    if (nameInput === "" || emailInput === "") {
+    if (!nameInput || !emailInput) {
         showModal("Por favor, preencha seu nome e e-mail antes de continuar.");
         return;
     }
@@ -154,12 +151,9 @@ window.submitResults = async function() {
     const form = document.getElementById('employeeForm');
     const statusMessage = document.getElementById('statusMessage');
 
-    // CÁLCULOS DO SCORE (sem alterações)
-    let totalScore = 0;
-    let inovadorScore = 0;
-    let executorScore = 0;
-    let especialistaScore = 0;
-    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
+    // Cálculos de score
+    let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
+    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
     const questionCategories = {
         'q1': { inovador: true, especialista: true },
         'q2': { inovador: true },
@@ -178,20 +172,13 @@ window.submitResults = async function() {
         const value = parseInt(slider.value, 10);
         totalScore += value;
         const category = questionCategories[q];
-        if (category.inovador) {
-            inovadorScore += value;
-        }
-        if (category.executor) {
-            executorScore += value;
-        }
-        if (category.especialista) {
-            especialistaScore += (6 - value);
-        }
+        if (category.inovador) inovadorScore += value;
+        if (category.executor) executorScore += value;
+        if (category.especialista) especialistaScore += (6 - value);
     }
 
     const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
-    let profile = "";
-    let description = "";
+    let profile = "", description = "";
 
     if (maxScore === inovadorScore) {
         profile = "O Inovador";
@@ -213,39 +200,25 @@ window.submitResults = async function() {
                 email: emailInput,
                 profile: profile,
                 description: description,
-                totalScore: totalScore,
-                inovadorScore: inovadorScore,
-                executorScore: executorScore,
-                especialistaScore: especialistaScore
+                totalScore, inovadorScore, executorScore, especialistaScore
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Erro ao salvar os dados.');
-        }
+        if (!response.ok) throw new Error('Erro ao salvar os dados.');
+
         statusMessage.classList.remove('hidden');
         statusMessage.classList.add('bg-green-100', 'text-green-800');
 
-        let successContent = "";
-        if (isRecruiterProfile) {
-            successContent = `
-                <p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-                <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">
-                    Refazer Questionário
-                </button>
-            `;
-        } else {
-            successContent = `
-                <p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-                <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">
-                    Voltar ao Início
-                </button>
-            `;
-        }
+        let successContent = isRecruiterProfile
+            ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+               <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+            : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+               <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+
         statusMessage.innerHTML = successContent;
-        document.getElementById('employeeForm').classList.add('hidden');
+        form.classList.add('hidden');
     } catch (e) {
         console.error("Erro ao salvar o resultado: ", e);
         showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
@@ -255,18 +228,17 @@ window.submitResults = async function() {
     }
 }
 
+// Reset do questionário
 window.resetQuestionnaire = function() {
-    document.getElementById('employeeForm').reset();
-    document.getElementById('employeeForm').classList.remove('hidden');
+    const form = document.getElementById('employeeForm');
+    form.reset();
+    form.classList.remove('hidden');
     document.getElementById('statusMessage').classList.add('hidden');
-    document.getElementById('submitButton').disabled = false;
-    document.getElementById('submitButton').classList.remove('bg-gray-400', 'cursor-not-allowed');
-    document.getElementById('submitButton').classList.add('bg-blue-600', 'hover:bg-blue-700');
-    
-    // Redireciona para a tela inicial baseada no perfil
-    if (isRecruiterProfile) {
-        showRecruiterDashboard();
-    } else {
-        showCandidateWelcome();
-    }
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = false;
+    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+    if (isRecruiterProfile) showRecruiterDashboard();
+    else showCandidateWelcome();
 }
