@@ -1,70 +1,54 @@
-// Arquivo: netlify/functions/saveResult.js
 const { createClient } = require('@supabase/supabase-js');
 
-// Variáveis de ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service Role Key
 
-// Log para verificar se as variáveis estão chegando
-console.log("SUPABASE_URL:", supabaseUrl ? supabaseUrl : "MISSING");
-console.log("SUPABASE_SERVICE_ROLE_KEY:", supabaseServiceKey ? "OK" : "MISSING");
-
-// Cria cliente Supabase
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async (event) => {
-  console.log("Método HTTP recebido:", event.httpMethod);
-
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  let data;
   try {
-    data = JSON.parse(event.body);
-    console.log("Dados recebidos do frontend:", JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error("Erro ao fazer parse do JSON:", err);
-    return { statusCode: 400, body: JSON.stringify({ error: 'JSON inválido' }) };
-  }
+    const data = JSON.parse(event.body);
 
-  try {
-    // Insere dados no Supabase
+    // Usando UPSERT para evitar erro de duplicidade
     const { error } = await supabase
-  .from('questionario_resultados')
-  .upsert([
-    {
-      name: data.name,
-      email: data.email,
-      profile: data.profile,
-      description: data.description,
-      totalScore: data.totalScore,
-      inovadorScore: data.inovadorScore,
-      executorScore: data.executorScore,
-      especialistaScore: data.especialistaScore,
-    }
-      ]);
+      .from('questionario_resultados')
+      .upsert(
+        [
+          {
+            name: data.name,
+            email: data.email,
+            profile: data.profile,
+            description: data.description,
+            totalScore: data.totalScore,
+            inovadorScore: data.inovadorScore,
+            executorScore: data.executorScore,
+            especialistaScore: data.especialistaScore,
+          }
+        ],
+        { onConflict: ['email'] } // chave única para atualizar
+      );
 
     if (error) {
-      console.error("Erro no Supabase:", JSON.stringify(error, null, 2));
+      console.error("Erro no Supabase:", error);
       return {
         statusCode: 500,
         body: JSON.stringify({ error: error.message, details: error.details })
       };
     }
 
-    console.log("Dados inseridos com sucesso:", JSON.stringify(result, null, 2));
-
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Dados salvos com sucesso!' })
+      body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
     };
   } catch (e) {
-    console.error("Erro interno da função:", e);
+    console.error("Erro na função:", e);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Erro interno do servidor.' })
     };
   }
 };
-
