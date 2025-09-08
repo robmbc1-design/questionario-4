@@ -1,9 +1,9 @@
 // Arquivo: netlify/functions/saveEmployerResult.js
 const { createClient } = require('@supabase/supabase-js');
 
-// Variáveis de ambiente do Supabase
+// Conexão com Supabase usando service role key
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service Role Key
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -15,9 +15,9 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
-    // Insere os dados na tabela do empregador
+    // Inserindo os dados na tabela do empregador
     const { error } = await supabase
-      .from('questionario_empregador')  // Tabela separada para empregadores
+      .from('questionario_empregador') // <- nome da tabela do employer
       .insert([
         {
           name: data.name,
@@ -41,7 +41,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Dados do empregador salvos com sucesso!' })
+      body: JSON.stringify({ message: 'Dados salvos com sucesso!' })
     };
   } catch (e) {
     console.error("Erro na função:", e);
