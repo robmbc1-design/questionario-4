@@ -1,7 +1,8 @@
+// Arquivo: netlify/functions/saveResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service Role Key
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -13,24 +14,19 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
-    // Usando UPSERT para evitar erro de duplicidade
     const { error } = await supabase
       .from('questionario_resultados')
-      .upsert(
-        [
-          {
-            name: data.name,
-            email: data.email,
-            profile: data.profile,
-            description: data.description,
-            totalScore: data.totalScore,
-            inovadorScore: data.inovadorScore,
-            executorScore: data.executorScore,
-            especialistaScore: data.especialistaScore,
-          }
-        ],
-        { onConflict: ['email'] } // chave única para atualizar
-      );
+      .upsert([{
+        name: data.name,
+        email: data.email,
+        profile: data.profile,
+        description: data.description,
+        totalScore: data.totalScore,
+        inovadorScore: data.inovadorScore,
+        executorScore: data.executorScore,
+        especialistaScore: data.especialistaScore,
+        timestamp: new Date().toISOString() // 🔥 sempre atualiza a data
+      }], { onConflict: 'email' }); // 🔥 garante update pelo email
 
     if (error) {
       console.error("Erro no Supabase:", error);
