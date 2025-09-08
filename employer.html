@@ -1,66 +1,98 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questionário Empregador - Conecta RH</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Questionário de Perfil Desejado - Empregador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <!-- Tela de boas-vindas -->
-    <div id="employerWelcomeScreen">
-        <h1>Bem-vindo ao Questionário do Empregador</h1>
-        <p>Responda as perguntas para identificar o perfil do funcionário que você busca.</p>
-        <button onclick="startEmployerQuestionnaire()">Iniciar Questionário</button>
-    </div>
+<body class="p-4 sm:p-6">
 
-    <!-- Questionário -->
-    <div id="employerQuestionnaire" class="hidden">
-        <form id="employerForm">
-            <div class="form-group">
-                <label for="name">Nome:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">E-mail:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
+<div id="employerQuestionnaire" class="container">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Questionário de Perfil do Funcionário Desejado</h1>
+    <p class="text-center text-gray-600 mb-8">Este questionário ajuda a identificar o perfil de funcionário que você procura.</p>
+    
+    <form id="employerForm" class="space-y-6">
+        <div class="question-card">
+            <label for="employerName" class="block text-gray-700 font-bold mb-2">Seu nome completo:</label>
+            <input type="text" id="employerName" name="employerName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome completo" required>
+        </div>
+        
+        <div class="question-card">
+            <label for="employerEmail" class="block text-gray-700 font-bold mb-2">Seu e-mail:</label>
+            <input type="email" id="employerEmail" name="employerEmail" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite um e-mail válido" required>
+        </div>
 
-            <!-- Perguntas -->
-            <div class="question-card">
-                <p>1. Prefere que o funcionário seja mais independente ou siga processos rigorosamente?</p>
-                <input type="range" name="q1" min="1" max="5" value="3">
+        <!-- Pergunta 1 -->
+        <div class="question-card">
+            <p class="font-semibold text-gray-800 mb-4">1. Ao contratar um novo funcionário, você prefere alguém com:</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Forte experiência técnica</span>
+                <div class="score-scale w-full">
+                    <input type="range" name="q1" id="q1" min="1" max="5" value="3" class="w-full">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Alta capacidade de inovação</span>
             </div>
-            <div class="question-card">
-                <p>2. Valoriza mais inovação ou cumprimento de tarefas com excelência?</p>
-                <input type="range" name="q2" min="1" max="5" value="3">
-            </div>
-            <div class="question-card">
-                <p>3. Prefere que o funcionário seja especialista em uma área ou generalista?</p>
-                <input type="range" name="q3" min="1" max="5" value="3">
-            </div>
-            <div class="question-card">
-                <p>4. Importa mais a criatividade ou a execução eficiente das tarefas?</p>
-                <input type="range" name="q4" min="1" max="5" value="3">
-            </div>
-            <div class="question-card">
-                <p>5. O funcionário ideal deve assumir riscos ou seguir regras seguras?</p>
-                <input type="range" name="q5" min="1" max="5" value="3">
-            </div>
+        </div>
 
-            <button type="button" id="submitEmployerButton" onclick="submitEmployerResults()">Finalizar Questionário</button>
-        </form>
+        <!-- Pergunta 2 -->
+        <div class="question-card">
+            <p class="font-semibold text-gray-800 mb-4">2. Em situações de pressão, você prefere um funcionário que:</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga processos rigorosamente</span>
+                <div class="score-scale w-full">
+                    <input type="range" name="q2" id="q2" min="1" max="5" value="3" class="w-full">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Adapte soluções de forma criativa</span>
+            </div>
+        </div>
 
-        <div id="employerStatusMessage" class="hidden"></div>
-        <button id="backFromEmployerQuestionnaire" class="hidden" onclick="resetEmployerQuestionnaire()">Voltar ao Início</button>
-    </div>
+        <!-- Pergunta 3 -->
+        <div class="question-card">
+            <p class="font-semibold text-gray-800 mb-4">3. Para trabalhos em equipe, você valoriza mais:</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Funcionários organizados e confiáveis</span>
+                <div class="score-scale w-full">
+                    <input type="range" name="q3" id="q3" min="1" max="5" value="3" class="w-full">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Funcionários proativos e inovadores</span>
+            </div>
+        </div>
 
-    <!-- Modal -->
-    <div id="infoModal" class="hidden">
-        <div id="modalMessage"></div>
-        <button onclick="closeModal()">Fechar</button>
-    </div>
+        <!-- Pergunta 4 -->
+        <div class="question-card">
+            <p class="font-semibold text-gray-800 mb-4">4. Você prefere contratar alguém que:</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga instruções detalhadas</span>
+                <div class="score-scale w-full">
+                    <input type="range" name="q4" id="q4" min="1" max="5" value="3" class="w-full">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Tome iniciativa para resolver problemas</span>
+            </div>
+        </div>
 
-    <script src="employerScript.js"></script>
+        <!-- Pergunta 5 -->
+        <div class="question-card">
+            <p class="font-semibold text-gray-800 mb-4">5. Em relação à aprendizagem de novas habilidades, você prefere um funcionário que:</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Aprenda seguindo processos formais</span>
+                <div class="score-scale w-full">
+                    <input type="range" name="q5" id="q5" min="1" max="5" value="3" class="w-full">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Aprenda explorando soluções práticas</span>
+            </div>
+        </div>
+    </form>
+
+    <button type="button" id="submitEmployerButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4">
+        Finalizar Questionário
+    </button>
+    
+    <div id="statusEmployerMessage" class="result-box hidden text-center mt-4"></div>
+</div>
+
+<script src="employerScript.js"></script>
 </body>
 </html>
