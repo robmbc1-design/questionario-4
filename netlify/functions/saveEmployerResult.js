@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
         // Insere os dados na tabela 'employer_profiles'
         const { data: newProfile, error } = await supabase
             .from('questionario_resultados_empregador')
-            .insert([{
+            .upsert([{
                 name: data.name,
                 email: data.email,
                 profile: data.profile,
