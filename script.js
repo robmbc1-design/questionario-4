@@ -322,4 +322,29 @@ window.submitEmployerResults = async function() {
         statusMessage.innerHTML = `
             <p class="font-bold text-lg">Perfil Ideal salvo com sucesso!</p>
             <p class="mt-2 text-md">O perfil desejado para o candidato foi armazenado.</p>
-            <button onclick="showRecruiterDashboard()" class="
+            <button onclick="showRecruiterDashboard()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Painel</button>
+        `;
+        form.classList.add('hidden');
+    } catch (e) {
+        console.error("Erro ao salvar o perfil: ", e);
+        showModal("Houve um erro ao salvar o perfil. Por favor, tente novamente.");
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+}
+
+// Reset do questionário
+window.resetQuestionnaire = function() {
+    const form = document.getElementById('employeeForm');
+    form.reset();
+    form.classList.remove('hidden');
+    document.getElementById('statusMessage').classList.add('hidden');
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = false;
+    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+    if (isRecruiterProfile) showRecruiterDashboard();
+    else showCandidateWelcome();
+}
