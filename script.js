@@ -144,9 +144,10 @@ window.showModal = function(message) {
     document.getElementById('infoModal').style.display = 'block';
 }
 
-// NOVO: A função de embaralhar agora recebe um ID de formulário para ser reutilizável.
-window.shuffleQuestions = function(formId = 'employeeForm') {
+// NOVO: A função de embaralhar agora recebe um ID de formulário e adiciona a numeração.
+window.shuffleQuestions = function(formId) {
     const form = document.getElementById(formId);
+    // Seleciona todas as 'question-card' que não são as de input (nome e email)
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
 
     for (let i = questionCards.length - 1; i > 0; i--) {
@@ -156,6 +157,15 @@ window.shuffleQuestions = function(formId = 'employeeForm') {
 
     // Re-apenda os elementos na nova ordem
     questionCards.forEach(card => form.appendChild(card));
+
+    // NOVO: Re-numera as perguntas
+    questionCards.forEach((card, index) => {
+        const pElement = card.querySelector('p');
+        if (pElement) {
+            const originalText = pElement.innerText.replace(/^\d+\.\s*/, ''); // Remove a numeração antiga
+            pElement.innerText = `${index + 1}. ${originalText}`; // Adiciona a nova numeração
+        }
+    });
 }
 
 // Submissão do questionário do colaborador
