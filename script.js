@@ -26,6 +26,12 @@ window.showCandidateWelcome = function() {
     showScreen('candidateWelcomeScreen');
 }
 
+// NOVO: Função para o botão Empregador
+window.showEmployerWelcome = function() {
+    isRecruiterProfile = false;
+    startEmployerQuestionnaire();
+}
+
 window.showRecruiterLogin = function() {
     isRecruiterProfile = true;
     showScreen('recruiterLoginScreen');
@@ -322,7 +328,7 @@ window.submitEmployerResults = async function() {
         statusMessage.innerHTML = `
             <p class="font-bold text-lg">Perfil Ideal salvo com sucesso!</p>
             <p class="mt-2 text-md">O perfil desejado para o candidato foi armazenado.</p>
-            <button onclick="showRecruiterDashboard()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Painel</button>
+            <button onclick="showRoleSelection()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Painel</button>
         `;
         form.classList.add('hidden');
     } catch (e) {
@@ -346,5 +352,5 @@ window.resetQuestionnaire = function() {
     submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
 
     if (isRecruiterProfile) showRecruiterDashboard();
-    else showCandidateWelcome();
+    else showRoleSelection();
 }
