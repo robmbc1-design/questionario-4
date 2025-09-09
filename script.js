@@ -265,7 +265,6 @@ window.submitResults = async function() {
     }
 }
 
-// NOVO: Função para submeter os resultados do empregador
 window.submitEmployerResults = async function() {
     const nameInput = document.getElementById('employerName').value.trim();
     const emailInput = document.getElementById('employerEmail').value.trim();
@@ -283,28 +282,34 @@ window.submitEmployerResults = async function() {
     const form = document.getElementById('employerForm');
     const statusMessage = document.getElementById('statusEmployerMessage');
 
-    // Mapeamento de score para as 5 perguntas do empregador
     let inovadorScore = 0, executorScore = 0;
-    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     
-    // NOVO: Lógica de score para as 5 perguntas. 
-    // O perfil "Especialista" foi removido pois as perguntas não o representam.
+    // Mapeamento das perguntas para o perfil (Inovador pontua 1-5, Executor pontua 5-1)
     const questionCategoriesEmployer = {
-        'q1': { inovador: true },      // Maior capacidade de inovação
-        'q2': { inovador: true, executor: true }, // Maior adaptação criativa (inovador) vs. seguir processo (executor)
-        'q3': { inovador: true, executor: true }, // Proativo/Inovador vs. Organizado/Confiável
-        'q4': { inovador: true, executor: true }, // Tomar iniciativa vs. Seguir instruções
-        'q5': { inovador: true, executor: true }  // Soluções práticas (executor) vs. Processos formais (inovador)
+        'q1': { inovador: true, executor: false },
+        'q2': { inovador: true, executor: true },
+        'q3': { inovador: true, executor: true },
+        'q4': { inovador: true, executor: true },
+        'q5': { inovador: true, executor: true },
+        'q6': { inovador: true, executor: true },
+        'q7': { inovador: true, executor: true },
+        'q8': { inovador: true, executor: true },
+        'q9': { inovador: true, executor: true },
+        'q10': { inovador: true, executor: true }
     };
-    
+
     for (const q of questionNames) {
         const slider = form.querySelector(`input[name="${q}"]`);
         const value = parseInt(slider.value, 10);
         
         const category = questionCategoriesEmployer[q];
-        if (category.inovador) inovadorScore += value;
-        // O executor pontua com o valor oposto
-        if (category.executor) executorScore += (6 - value);
+        if (category.inovador) {
+            inovadorScore += value;
+        }
+        if (category.executor) {
+            executorScore += (6 - value);
+        }
     }
     
     let profile = "", description = "";
@@ -320,7 +325,7 @@ window.submitEmployerResults = async function() {
     }
 
     try {
-        const response = await fetch('/.netlify/functions/saveEmployerProfile', { // NOVO ENDPOINT
+        const response = await fetch('/.netlify/functions/saveEmployerProfile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -351,7 +356,6 @@ window.submitEmployerResults = async function() {
         submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
     }
 }
-
 // Reset do questionário
 window.resetQuestionnaire = function() {
     const form = document.getElementById('employeeForm');
@@ -366,4 +370,5 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+
 
