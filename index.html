@@ -229,89 +229,144 @@
         </div>
     </div>
     
-    <div id="employerQuestionnaire" class="hidden">
-        <div class="container">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Questionário de Perfil do Funcionário Desejado</h1>
-            <p class="text-center text-gray-600 mb-8">Este questionário ajuda a identificar o perfil de funcionário que você procura.</p>
+   <div id="employerQuestionnaire" class="hidden">
+    <div class="container">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Questionário de Perfil do Funcionário Desejado</h1>
+        <p class="text-center text-gray-600 mb-8">Este questionário ajuda a identificar o perfil de funcionário que você procura.</p>
+        
+        <form id="employerForm" class="space-y-6">
+            <div class="question-card">
+                <label for="employerName" class="block text-gray-700 font-bold mb-2">Seu nome completo:</label>
+                <input type="text" id="employerName" name="employerName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome completo" required>
+            </div>
             
-            <form id="employerForm" class="space-y-6">
-                <div class="question-card">
-                    <label for="employerName" class="block text-gray-700 font-bold mb-2">Seu nome completo:</label>
-                    <input type="text" id="employerName" name="employerName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome completo" required>
-                </div>
-                
-                <div class="question-card">
-                    <label for="employerEmail" class="block text-gray-700 font-bold mb-2">Seu e-mail:</label>
-                    <input type="email" id="employerEmail" name="employerEmail" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite um e-mail válido" required>
-                </div>
+            <div class="question-card">
+                <label for="employerEmail" class="block text-gray-700 font-bold mb-2">Seu e-mail:</label>
+                <input type="email" id="employerEmail" name="employerEmail" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite um e-mail válido" required>
+            </div>
 
-                <div class="question-card">
-                    <p class="font-semibold text-gray-800 mb-4">Ao contratar um novo funcionário, você prefere alguém com:</p>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                        <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Forte experiência técnica</span>
-                        <div class="score-scale w-full">
-                            <input type="range" name="q1" id="eq1" min="1" max="5" value="3" class="w-full">
-                        </div>
-                        <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Alta capacidade de inovação</span>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Ao contratar um novo funcionário, você prefere alguém com:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Forte experiência técnica</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q1" id="eq1" min="1" max="5" value="3" class="w-full">
                     </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Alta capacidade de inovação</span>
                 </div>
+            </div>
 
-                <div class="question-card">
-                    <p class="font-semibold text-gray-800 mb-4">Em situações de pressão, você prefere um funcionário que:</p>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                        <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga processos rigorosamente</span>
-                        <div class="score-scale w-full">
-                            <input type="range" name="q2" id="eq2" min="1" max="5" value="3" class="w-full">
-                        </div>
-                        <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Adapte soluções de forma criativa</span>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Em situações de pressão, você prefere um funcionário que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga processos rigorosamente</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q2" id="eq2" min="1" max="5" value="3" class="w-full">
                     </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Adapte soluções de forma criativa</span>
                 </div>
+            </div>
 
-                <div class="question-card">
-                    <p class="font-semibold text-gray-800 mb-4">Para trabalhos em equipe, você valoriza mais:</p>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                        <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Funcionários organizados e confiáveis</span>
-                        <div class="score-scale w-full">
-                            <input type="range" name="q3" id="eq3" min="1" max="5" value="3" class="w-full">
-                        </div>
-                        <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Funcionários proativos e inovadores</span>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Para trabalhos em equipe, você valoriza mais:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Funcionários organizados e confiáveis</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q3" id="eq3" min="1" max="5" value="3" class="w-full">
                     </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Funcionários proativos e inovadores</span>
                 </div>
+            </div>
 
-                <div class="question-card">
-                    <p class="font-semibold text-gray-800 mb-4">Você prefere contratar alguém que:</p>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                        <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga instruções detalhadas</span>
-                        <div class="score-scale w-full">
-                            <input type="range" name="q4" id="eq4" min="1" max="5" value="3" class="w-full">
-                        </div>
-                        <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Tome iniciativa para resolver problemas</span>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Você prefere contratar alguém que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga instruções detalhadas</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q4" id="eq4" min="1" max="5" value="3" class="w-full">
                     </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Tome iniciativa para resolver problemas</span>
                 </div>
+            </div>
 
-                <div class="question-card">
-                    <p class="font-semibold text-gray-800 mb-4">Em relação à aprendizagem de novas habilidades, você prefere um funcionário que:</p>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                        <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Aprenda seguindo processos formais</span>
-                        <div class="score-scale w-full">
-                            <input type="range" name="q5" id="eq5" min="1" max="5" value="3" class="w-full">
-                        </div>
-                        <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Aprenda explorando soluções práticas</span>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Em relação à aprendizagem de novas habilidades, você prefere um funcionário que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Aprenda seguindo processos formais</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q5" id="eq5" min="1" max="5" value="3" class="w-full">
                     </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Aprenda explorando soluções práticas</span>
                 </div>
-            </form>
+            </div>
 
-            <button type="button" id="submitEmployerButton" onclick="submitEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4">
-                Finalizar Questionário
-            </button>
-            
-            <div id="statusEmployerMessage" class="result-box hidden text-center mt-4"></div>
-            
-            <button onclick="showRoleSelection()" id="backFromEmployerQuestionnaire" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
-                &lt; Voltar
-            </button>
-        </div>
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Em uma equipe, você valoriza mais um funcionário que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Garante que as metas sejam cumpridas</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q6" id="eq6" min="1" max="5" value="3" class="w-full">
+                    </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Incentiva a criatividade e novas abordagens</span>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Para um projeto, você prefere um funcionário que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Analisa cuidadosamente os riscos e detalhes</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q7" id="eq7" min="1" max="5" value="3" class="w-full">
+                    </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Busca oportunidades para ir além das expectativas</span>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Você se sente mais confortável em um ambiente de trabalho que:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Segue uma hierarquia e rotina bem definidas</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q8" id="eq8" min="1" max="5" value="3" class="w-full">
+                    </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Incentiva a autonomia e a experimentação</span>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Ao delegar uma tarefa, você espera que o funcionário:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Entregue o resultado conforme o plano inicial</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q9" id="eq9" min="1" max="5" value="3" class="w-full">
+                    </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Apresente melhorias ou uma abordagem diferente</span>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <p class="font-semibold text-gray-800 mb-4">Para a cultura da empresa, você valoriza mais:</p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">A estabilidade e a eficiência das operações</span>
+                    <div class="score-scale w-full">
+                        <input type="range" name="q10" id="eq10" min="1" max="5" value="3" class="w-full">
+                    </div>
+                    <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">A busca constante por inovação e crescimento</span>
+                </div>
+            </div>
+        </form>
+
+        <button type="button" id="submitEmployerButton" onclick="submitEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4">
+            Finalizar Questionário
+        </button>
+        
+        <div id="statusEmployerMessage" class="result-box hidden text-center mt-4"></div>
+        
+        <button onclick="showRoleSelection()" id="backFromEmployerQuestionnaire" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
+            &lt; Voltar
+        </button>
     </div>
+</div>
     
     <div id="infoModal" class="modal">
         <div class="modal-content">
@@ -326,3 +381,4 @@
 
 </body>
 </html>
+
