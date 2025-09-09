@@ -1,63 +1,62 @@
-const { MongoClient } = require('mongodb');
+const { createClient } = require('@supabase/supabase-js');
 
-// URI de conexão do MongoDB Atlas.
-// Lembre-se de substituir <username>, <password> e o nome do banco de dados.
-const uri = process.env.MONGODB_URI;
+// Configuração do Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Inicializa o cliente Supabase com a chave de serviço
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
     // Apenas permitir requisições POST
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
-            body: 'Method Not Allowed',
+            body: JSON.stringify({ message: "Method Not Allowed" }),
         };
     }
 
-    // Analisar o corpo da requisição
-    const data = JSON.parse(event.body);
-
-    // Validação de dados
-    if (!data || !data.name || !data.email) {
-        return {
-            statusCode: 400,
-            body: 'Missing required fields (name or email)',
-        };
-    }
-
-    let client;
     try {
-        client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-        await client.connect();
+        const data = JSON.parse(event.body);
 
-        const database = client.db("Cluster"); // Nome do seu banco de dados
-        const collection = database.collection("employerProfiles"); // Nome da nova coleção
+        // Validação de dados
+        if (!data || !data.name || !data.email) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: "Missing required fields (name or email)" }),
+            };
+        }
 
-        const document = {
-            name: data.name,
-            email: data.email,
-            profile: data.profile,
-            description: data.description,
-            inovadorScore: data.inovadorScore,
-            executorScore: data.executorScore,
-            timestamp: new Date()
-        };
+        // Insere os dados na tabela 'employer_profiles'
+        const { data: newProfile, error } = await supabase
+            .from('employer_profiles')
+            .insert([{
+                name: data.name,
+                email: data.email,
+                profile: data.profile,
+                description: data.description,
+                inovador_score: data.inovadorScore,
+                executor_score: data.executorScore
+            }]);
 
-        const result = await collection.insertOne(document);
+        if (error) {
+            console.error('Erro ao salvar no Supabase:', error);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Erro ao salvar o perfil.', error: error.message }),
+            };
+        }
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Perfil do empregador salvo com sucesso!", id: result.insertedId }),
+            body: JSON.stringify({ message: 'Perfil do empregador salvo com sucesso!', data: newProfile }),
         };
 
-    } catch (error) {
-        console.error("Erro ao salvar o perfil:", error);
+    } catch (parseError) {
+        console.error('Erro ao processar a requisição:', parseError);
         return {
-            statusCode: 500,
-            body: JSON.stringify({ message: "Erro interno do servidor", error: error.message }),
+            statusCode: 400,
+            body: JSON.stringify({ message: 'Erro ao processar a requisição.' }),
         };
-    } finally {
-        if (client) {
-            await client.close();
-        }
     }
 };
