@@ -118,7 +118,9 @@ window.viewAllResults = async function() {
 
         resultsList.innerHTML = '';
         results.forEach((data) => {
-            const date = new Date(data.timestamp).toLocaleString('pt-BR');
+            // AQUI ESTÁ A MUDANÇA: convertendo a data para o fuso horário do Brasil
+            const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            
             const resultCard = document.createElement('div');
             resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
             resultCard.innerHTML = `
@@ -364,3 +366,4 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+
