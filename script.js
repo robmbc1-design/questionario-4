@@ -1,6 +1,4 @@
-// Credenciais do recrutador para teste local.
-const recruiterUsername = 'rh@conectarh.com';
-const recruiterPassword = 'conectarh123';
+// A variável de credenciais foi removida para maior segurança.
 let isRecruiterProfile = false; // Variável para controlar o perfil de acesso
 
 // Função para alternar a visibilidade das telas
@@ -56,17 +54,32 @@ window.startQuestionnaire = function(isRecruiter = false) {
     }
 }
 
-// Login do recrutador
-window.loginRecruiter = function() {
+// Login do recrutador (agora com autenticação no servidor)
+window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
     const loginMessage = document.getElementById('loginMessage');
+    loginMessage.classList.add('hidden');
 
-    if (usernameInput === recruiterUsername && passwordInput === recruiterPassword) {
-        loginMessage.classList.add('hidden');
-        showScreen('recruiterDashboard');
-    } else {
-        loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+    try {
+        const response = await fetch('/.netlify/functions/authenticateRecruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
+
+        if (response.ok) {
+            showScreen('recruiterDashboard');
+        } else {
+            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error("Erro na autenticação:", e);
+        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
         loginMessage.classList.remove('hidden');
     }
 }
@@ -116,15 +129,21 @@ window.showModal = function(message) {
     document.getElementById('infoModal').style.display = 'block';
 }
 
+// Função de embaralhar perguntas (melhorada)
 window.shuffleQuestions = function() {
     const form = document.getElementById('employeeForm');
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
-
+    
+    // Algoritmo de Fisher-Yates para embaralhar o array
     for (let i = questionCards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        form.appendChild(questionCards[j]);
+        [questionCards[i], questionCards[j]] = [questionCards[j], questionCards[i]];
     }
-
+    
+    // Re-apenda os elementos na nova ordem
+    questionCards.forEach(card => form.appendChild(card));
+    
+    // Renumera as perguntas
     const shuffledCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
     shuffledCards.forEach((card, index) => {
         const questionParagraph = card.querySelector('p');
@@ -211,11 +230,11 @@ window.submitResults = async function() {
 
         let successContent = isRecruiterProfile
             ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-               <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+                <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
             : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-               <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+                <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
 
         statusMessage.innerHTML = successContent;
         form.classList.add('hidden');
