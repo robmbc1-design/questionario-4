@@ -1,9 +1,9 @@
-// A variável de credenciais foi removida para maior segurança.
-let isRecruiterProfile = false; // Variável para controlar o perfil de acesso
+// Credenciais e perfil
+let isRecruiterProfile = false;
 
 // Função para alternar a visibilidade das telas
 window.showScreen = function(screenId) {
-    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire']; // Adicionado a nova tela
+    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
     screens.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.classList.add('hidden');
@@ -16,20 +16,15 @@ window.showScreen = function(screenId) {
 window.showRoleSelection = function() {
     isRecruiterProfile = false;
     showScreen('roleSelectionScreen');
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('loginMessage').classList.add('hidden');
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
 window.showCandidateWelcome = function() {
     isRecruiterProfile = false;
     showScreen('candidateWelcomeScreen');
-}
-
-// NOVO: Função para o botão Empregador
-window.showEmployerWelcome = function() {
-    isRecruiterProfile = false;
-    startEmployerQuestionnaire();
 }
 
 window.showRecruiterLogin = function() {
@@ -40,6 +35,7 @@ window.showRecruiterLogin = function() {
 window.showRecruiterDashboard = function() {
     isRecruiterProfile = true;
     showScreen('recruiterDashboard');
+    window.viewAllResults();
 }
 
 window.startQuestionnaire = function(isRecruiter = false) {
@@ -48,7 +44,7 @@ window.startQuestionnaire = function(isRecruiter = false) {
     document.getElementById('employeeForm').reset();
     document.getElementById('statusMessage').classList.add('hidden');
     document.getElementById('employeeForm').classList.remove('hidden');
-
+    
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
     if (isRecruiter) {
@@ -58,15 +54,6 @@ window.startQuestionnaire = function(isRecruiter = false) {
         backForRecruiter.classList.add('hidden');
         backForCandidate.classList.remove('hidden');
     }
-}
-
-// NOVO: Função para iniciar o questionário do empregador
-window.startEmployerQuestionnaire = function() {
-    showScreen('employerQuestionnaire');
-    shuffleQuestions('employerForm');
-    document.getElementById('employerForm').reset();
-    document.getElementById('statusEmployerMessage').classList.add('hidden');
-    document.getElementById('employerForm').classList.remove('hidden');
 }
 
 // Login do recrutador (agora com autenticação no servidor)
@@ -118,7 +105,6 @@ window.viewAllResults = async function() {
 
         resultsList.innerHTML = '';
         results.forEach((data) => {
-            // AQUI ESTÁ A MUDANÇA: convertendo a data para o fuso horário do Brasil
             const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
             
             const resultCard = document.createElement('div');
@@ -142,14 +128,11 @@ window.viewAllResults = async function() {
 
 // Funções globais
 window.showModal = function(message) {
-    document.getElementById('modalMessage').innerText = message;
-    document.getElementById('infoModal').style.display = 'block';
+    alert(message);
 }
 
-// NOVO: A função de embaralhar agora recebe um ID de formulário e adiciona a numeração.
 window.shuffleQuestions = function(formId) {
     const form = document.getElementById(formId);
-    // Seleciona todas as 'question-card' que não são as de input (nome e email)
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
 
     for (let i = questionCards.length - 1; i > 0; i--) {
@@ -157,15 +140,13 @@ window.shuffleQuestions = function(formId) {
         [questionCards[i], questionCards[j]] = [questionCards[j], questionCards[i]];
     }
 
-    // Re-apenda os elementos na nova ordem
     questionCards.forEach(card => form.appendChild(card));
 
-    // NOVO: Re-numera as perguntas
     questionCards.forEach((card, index) => {
         const pElement = card.querySelector('p');
         if (pElement) {
-            const originalText = pElement.innerText.replace(/^\d+\.\s*/, ''); // Remove a numeração antiga
-            pElement.innerText = `${index + 1}. ${originalText}`; // Adiciona a nova numeração
+            const originalText = pElement.innerText.replace(/^\d+\.\s*/, '');
+            pElement.innerText = `${index + 1}. ${originalText}`;
         }
     });
 }
@@ -188,9 +169,8 @@ window.submitResults = async function() {
     const form = document.getElementById('employeeForm');
     const statusMessage = document.getElementById('statusMessage');
 
-    // Cálculos de score
     let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
-    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     const questionCategories = {
         'q1': { inovador: true, especialista: true },
         'q2': { inovador: true },
@@ -265,97 +245,6 @@ window.submitResults = async function() {
     }
 }
 
-window.submitEmployerResults = async function() {
-    const nameInput = document.getElementById('employerName').value.trim();
-    const emailInput = document.getElementById('employerEmail').value.trim();
-
-    if (!nameInput || !emailInput) {
-        showModal("Por favor, preencha seu nome e e-mail antes de continuar.");
-        return;
-    }
-
-    const submitButton = document.getElementById('submitEmployerButton');
-    submitButton.disabled = true;
-    submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-
-    const form = document.getElementById('employerForm');
-    const statusMessage = document.getElementById('statusEmployerMessage');
-
-    let inovadorScore = 0, executorScore = 0;
-    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
-    
-    // Mapeamento das perguntas para o perfil (Inovador pontua 1-5, Executor pontua 5-1)
-    const questionCategoriesEmployer = {
-        'q1': { inovador: true, executor: false },
-        'q2': { inovador: true, executor: true },
-        'q3': { inovador: true, executor: true },
-        'q4': { inovador: true, executor: true },
-        'q5': { inovador: true, executor: true },
-        'q6': { inovador: true, executor: true },
-        'q7': { inovador: true, executor: true },
-        'q8': { inovador: true, executor: true },
-        'q9': { inovador: true, executor: true },
-        'q10': { inovador: true, executor: true }
-    };
-
-    for (const q of questionNames) {
-        const slider = form.querySelector(`input[name="${q}"]`);
-        const value = parseInt(slider.value, 10);
-        
-        const category = questionCategoriesEmployer[q];
-        if (category.inovador) {
-            inovadorScore += value;
-        }
-        if (category.executor) {
-            executorScore += (6 - value);
-        }
-    }
-    
-    let profile = "", description = "";
-    if (inovadorScore > executorScore) {
-        profile = "Perfil Inovador";
-        description = "O empregador busca um profissional proativo, com alta capacidade de adaptação e que tome a iniciativa para propor e executar novas ideias.";
-    } else if (executorScore > inovadorScore) {
-        profile = "Perfil Executor";
-        description = "O empregador busca um profissional focado, que valoriza a organização, a execução precisa de tarefas e o trabalho em equipe com base em processos bem definidos.";
-    } else {
-        profile = "Perfil Equilibrado";
-        description = "O empregador busca um profissional com um equilíbrio entre a capacidade de inovar e a habilidade de executar tarefas de forma organizada.";
-    }
-
-    try {
-        const response = await fetch('/.netlify/functions/saveEmployerProfile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: nameInput,
-                email: emailInput,
-                profile,
-                description,
-                inovadorScore,
-                executorScore
-            })
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar o perfil.');
-
-        statusMessage.classList.remove('hidden');
-        statusMessage.classList.add('bg-green-100', 'text-green-800');
-        statusMessage.innerHTML = `
-            <p class="font-bold text-lg">Perfil Ideal salvo com sucesso!</p>
-            <p class="mt-2 text-md">O perfil desejado para o candidato foi armazenado.</p>
-            <button onclick="showRoleSelection()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Painel</button>
-        `;
-        form.classList.add('hidden');
-    } catch (e) {
-        console.error("Erro ao salvar o perfil: ", e);
-        showModal("Houve um erro ao salvar o perfil. Por favor, tente novamente.");
-        submitButton.disabled = false;
-        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-    }
-}
 // Reset do questionário
 window.resetQuestionnaire = function() {
     const form = document.getElementById('employeeForm');
@@ -370,6 +259,3 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
-
-
-
