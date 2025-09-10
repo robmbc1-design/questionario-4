@@ -105,7 +105,7 @@ window.viewAllResults = async function() {
     const resultsList = document.getElementById('resultsList');
 
     try {
-        const response = await fetch('/.netlify/functions/getAllResults');
+        const response = await fetch('/.netlify/functions/saveEmployerResults');
         if (!response.ok) throw new Error('Erro ao buscar os dados.');
 
         let results = await response.json();
@@ -370,5 +370,6 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+
 
 
