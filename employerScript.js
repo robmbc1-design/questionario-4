@@ -32,7 +32,7 @@ window.showModal = function(message) {
 }
 
 // Função para enviar os resultados (CORRIGIDA)
-window.submitEmployerResults = async function() {
+window.submitEmployerResult = async function() {
     const nameInput = document.getElementById('employerName').value.trim();
     const emailInput = document.getElementById('employerEmail').value.trim();
     const submitButton = document.getElementById('submitEmployerButton');
