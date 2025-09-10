@@ -27,32 +27,31 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Insere os dados na tabela 'employer_profiles'
+        // AQUI ESTÁ A MUDANÇA: Usando .insert() para simplicidade e confiabilidade
         const { data: newProfile, error } = await supabase
-            .from('questionario_resultados_empregador')
-            .upsert([{
+            .from('questionario_resultados_empregador') // Verifique se este é o nome exato da sua tabela no Supabase
+            .insert([{
                 name: data.name,
                 email: data.email,
                 profile: data.profile,
                 description: data.description,
                 inovadorScore: data.inovadorScore,
-                executorScore: data.executorScore
+                executorScore: data.executorScore,
             }]);
 
       if (error) {
-  console.error('Erro ao salvar no Supabase:', error);
-  return {
-    statusCode: 500,
-    body: JSON.stringify({ 
-      message: 'Erro ao salvar o perfil.', 
-      error: error.message, 
-      details: error.details, 
-      hint: error.hint, 
-      code: error.code 
-    }),
-  };
-}
-
+        console.error('Erro ao salvar no Supabase:', error);
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ 
+            message: 'Erro ao salvar o perfil.', 
+            error: error.message, 
+            details: error.details, 
+            hint: error.hint, 
+            code: error.code 
+          }),
+        };
+      }
 
         return {
             statusCode: 200,
