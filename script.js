@@ -51,7 +51,7 @@ window.startQuestionnaire = function(isRecruiter = false) {
     document.getElementById('employeeForm').reset();
     document.getElementById('statusMessage').classList.add('hidden');
     document.getElementById('employeeForm').classList.remove('hidden');
-    
+
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
     if (isRecruiter) {
@@ -113,7 +113,7 @@ window.viewAllResults = async function() {
         resultsList.innerHTML = '';
         results.forEach((data) => {
             const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-            
+
             const resultCard = document.createElement('div');
             resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
             resultCard.innerHTML = `
@@ -196,4 +196,72 @@ window.submitResults = async function() {
         const value = parseInt(slider.value, 10);
         totalScore += value;
         const category = questionCategories[q];
-        if (category.inovador) inovadorScore +=
+        if (category.inovador) inovadorScore += value;
+        if (category.executor) executorScore += value;
+        if (category.especialista) especialistaScore += (6 - value);
+    }
+
+    const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
+    let profile = "", description = "";
+
+    if (maxScore === inovadorScore) {
+        profile = "O Inovador";
+        description = "Você é um profissional proativo e adaptável. Você busca soluções, toma iniciativa e prefere trabalhar com autonomia para gerar os melhores resultados. É um agente de mudança em qualquer equipe.";
+    } else if (maxScore === executorScore) {
+        profile = "O Executor Estratégico";
+        description = "Você é focado, colaborativo e se destaca na execução de tarefas. Você trabalha bem em equipe, segue processos de forma eficiente e se dedica a garantir que os objetivos sejam atingidos. Você é a espinha dorsal de qualquer operação.";
+    } else {
+        profile = "O Especialista Fiel";
+        description = "Você é um profissional metódico e confiável. Você se sente mais confortável em ambientes estruturados, seguindo diretrizes claras. Sua dedicação e precisão são o alicerce para manter a rotina e a estabilidade da empresa.";
+    }
+
+    try {
+        const response = await fetch('/.netlify/functions/saveResult', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nameInput,
+                email: emailInput,
+                profile: profile,
+                description: description,
+                totalScore, inovadorScore, executorScore, especialistaScore
+            })
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar os dados.');
+
+        statusMessage.classList.remove('hidden');
+        statusMessage.classList.add('bg-green-100', 'text-green-800');
+
+        let successContent = isRecruiterProfile
+            ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+            : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+
+        statusMessage.innerHTML = successContent;
+        form.classList.add('hidden');
+    } catch (e) {
+        console.error("Erro ao salvar o resultado: ", e);
+        showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+}
+
+window.resetQuestionnaire = function() {
+    const form = document.getElementById('employeeForm');
+    form.reset();
+    form.classList.remove('hidden');
+    document.getElementById('statusMessage').classList.add('hidden');
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = false;
+    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+    if (isRecruiterProfile) showRecruiterDashboard();
+    else showRoleSelection();
+}
