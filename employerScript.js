@@ -1,4 +1,4 @@
-// Função para exibir/ocultar telas (ajustada para este contexto)
+// Funções de navegação específicas para o empregador
 window.showScreen = function(screenId) {
     const screens = ['employerQuestionnaire', 'employerResults'];
     screens.forEach(id => {
@@ -9,7 +9,20 @@ window.showScreen = function(screenId) {
     if (target) target.classList.remove('hidden');
 }
 
-// Função para embaralhar perguntas
+window.showModal = function(message) {
+    alert(message);
+}
+
+// Função para iniciar o questionário do empregador
+window.startEmployerQuestionnaire = function() {
+    window.showScreen('employerQuestionnaire');
+    window.shuffleEmployerQuestions();
+    document.getElementById('employerForm').reset();
+    document.getElementById('statusEmployerMessage').classList.add('hidden');
+    document.getElementById('employerForm').classList.remove('hidden');
+}
+
+// Funções específicas do questionário do empregador
 window.shuffleEmployerQuestions = function() {
     const form = document.getElementById('employerForm');
     const cards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
@@ -26,20 +39,15 @@ window.shuffleEmployerQuestions = function() {
     });
 }
 
-// Função para exibir um modal de alerta
-window.showModal = function(message) {
-    alert(message);
-}
-
-// Função para enviar os resultados (CORRIGIDA)
-window.submitEmployerResult = async function() {
+// Função para enviar os resultados
+window.submitEmployerResults = async function() {
     const nameInput = document.getElementById('employerName').value.trim();
     const emailInput = document.getElementById('employerEmail').value.trim();
     const submitButton = document.getElementById('submitEmployerButton');
     const statusMessage = document.getElementById('statusEmployerMessage');
 
     if (!nameInput || !emailInput) {
-        showModal("Por favor, preencha nome e e-mail.");
+        window.showModal("Por favor, preencha nome e e-mail.");
         return;
     }
 
@@ -49,7 +57,7 @@ window.submitEmployerResult = async function() {
 
     const form = document.getElementById('employerForm');
 
-    // Lógica de pontuação simplificada e corrigida
+    // Lógica de pontuação corrigida para as 5 perguntas
     let inovadorScore = 0;
     let executorScore = 0;
 
@@ -103,7 +111,7 @@ window.submitEmployerResult = async function() {
         form.classList.add('hidden');
     } catch (e) {
         console.error("Erro ao salvar o perfil:", e);
-        showModal("Houve um erro ao salvar o perfil. Por favor, tente novamente.");
+        window.showModal("Houve um erro ao salvar o perfil. Por favor, tente novamente.");
         submitButton.disabled = false;
         submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
         submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
