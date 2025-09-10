@@ -35,17 +35,24 @@ exports.handler = async (event, context) => {
                 email: data.email,
                 profile: data.profile,
                 description: data.description,
-                inovador_score: data.inovadorScore,
-                executor_score: data.executorScore
+                inovadorScore: data.inovadorScore,
+                executorScore: data.executorScore
             }]);
 
-        if (error) {
-            console.error('Erro ao salvar no Supabase:', error);
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ message: 'Erro ao salvar o perfil.', error: error.message }),
-            };
-        }
+      if (error) {
+  console.error('Erro ao salvar no Supabase:', error);
+  return {
+    statusCode: 500,
+    body: JSON.stringify({ 
+      message: 'Erro ao salvar o perfil.', 
+      error: error.message, 
+      details: error.details, 
+      hint: error.hint, 
+      code: error.code 
+    }),
+  };
+}
+
 
         return {
             statusCode: 200,
