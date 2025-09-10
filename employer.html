@@ -1,98 +1,92 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questionário de Perfil Desejado - Empregador</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <title>Perfil Ideal de Candidato</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="p-4 sm:p-6">
+<body class="bg-gray-100 font-sans">
 
-<div id="employerQuestionnaire" class="container">
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Questionário de Perfil do Funcionário Desejado</h1>
-    <p class="text-center text-gray-600 mb-8">Este questionário ajuda a identificar o perfil de funcionário que você procura.</p>
-    
-    <form id="employerForm" class="space-y-6">
-        <div class="question-card">
-            <label for="employerName" class="block text-gray-700 font-bold mb-2">Seu nome completo:</label>
-            <input type="text" id="employerName" name="employerName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome completo" required>
-        </div>
-        
-        <div class="question-card">
-            <label for="employerEmail" class="block text-gray-700 font-bold mb-2">Seu e-mail:</label>
-            <input type="email" id="employerEmail" name="employerEmail" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite um e-mail válido" required>
-        </div>
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl w-full space-y-8">
+            <div class="mb-8">
+                <a href="index.html" class="flex items-center text-gray-600 hover:text-gray-800 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Voltar
+                </a>
+            </div>
 
-        <!-- Pergunta 1 -->
-        <div class="question-card">
-            <p class="font-semibold text-gray-800 mb-4">1. Ao contratar um novo funcionário, você prefere alguém com:</p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Forte experiência técnica</span>
-                <div class="score-scale w-full">
-                    <input type="range" name="q1" id="q1" min="1" max="5" value="3" class="w-full">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Alta capacidade de inovação</span>
+            <div id="employerQuestionnaire" class="bg-white p-8 md:p-12 rounded-lg shadow-xl text-center transition duration-500 ease-in-out">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+                    Perfil Ideal de Candidato
+                </h2>
+                <p class="text-lg text-gray-600 mb-8">
+                    Avalie a importância de cada característica para o candidato ideal.
+                </p>
+
+                <form id="employerForm" class="space-y-6">
+                    <div>
+                        <input id="employerName" name="employerName" type="text" placeholder="Seu Nome" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    </div>
+                    <div>
+                        <input id="employerEmail" name="employerEmail" type="email" placeholder="Seu E-mail" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                    </div>
+                    
+                    <div class="question-card">
+                        <p>1. O candidato ideal busca soluções ativamente para problemas complexos.</p>
+                        <input type="range" name="q1" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>2. O candidato ideal prefere trabalhar de forma autônoma e ter liberdade para inovar.</p>
+                        <input type="range" name="q2" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>3. O candidato ideal se adapta rapidamente a novas ferramentas e metodologias.</p>
+                        <input type="range" name="q3" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>4. O candidato ideal é focado e se destaca na execução de tarefas rotineiras.</p>
+                        <input type="range" name="q4" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>5. O candidato ideal é colaborativo e segue processos de forma eficiente.</p>
+                        <input type="range" name="q5" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>6. O candidato ideal propõe melhorias e novas ideias para o fluxo de trabalho.</p>
+                        <input type="range" name="q6" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>7. O candidato ideal valoriza um ambiente de trabalho estável e com regras claras.</p>
+                        <input type="range" name="q7" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>8. O candidato ideal não tem medo de falhar ao tentar algo novo.</p>
+                        <input type="range" name="q8" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>9. O candidato ideal prefere a segurança de um método comprovado a uma solução criativa.</p>
+                        <input type="range" name="q9" min="1" max="5" value="3">
+                    </div>
+                    <div class="question-card">
+                        <p>10. O candidato ideal se sente confortável com mudanças frequentes nas prioridades.</p>
+                        <input type="range" name="q10" min="1" max="5" value="3">
+                    </div>
+                    
+                    <button type="button" id="submitEmployerButton" onclick="submitEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Finalizar e Salvar
+                    </button>
+                </form>
+
+                <div id="statusEmployerMessage" class="hidden mt-6 p-4 rounded-lg text-center font-semibold"></div>
             </div>
         </div>
+    </div>
 
-        <!-- Pergunta 2 -->
-        <div class="question-card">
-            <p class="font-semibold text-gray-800 mb-4">2. Em situações de pressão, você prefere um funcionário que:</p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga processos rigorosamente</span>
-                <div class="score-scale w-full">
-                    <input type="range" name="q2" id="q2" min="1" max="5" value="3" class="w-full">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Adapte soluções de forma criativa</span>
-            </div>
-        </div>
+    <script src="employerScript.js"></script>
 
-        <!-- Pergunta 3 -->
-        <div class="question-card">
-            <p class="font-semibold text-gray-800 mb-4">3. Para trabalhos em equipe, você valoriza mais:</p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Funcionários organizados e confiáveis</span>
-                <div class="score-scale w-full">
-                    <input type="range" name="q3" id="q3" min="1" max="5" value="3" class="w-full">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Funcionários proativos e inovadores</span>
-            </div>
-        </div>
-
-        <!-- Pergunta 4 -->
-        <div class="question-card">
-            <p class="font-semibold text-gray-800 mb-4">4. Você prefere contratar alguém que:</p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Siga instruções detalhadas</span>
-                <div class="score-scale w-full">
-                    <input type="range" name="q4" id="q4" min="1" max="5" value="3" class="w-full">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Tome iniciativa para resolver problemas</span>
-            </div>
-        </div>
-
-        <!-- Pergunta 5 -->
-        <div class="question-card">
-            <p class="font-semibold text-gray-800 mb-4">5. Em relação à aprendizagem de novas habilidades, você prefere um funcionário que:</p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">Aprenda seguindo processos formais</span>
-                <div class="score-scale w-full">
-                    <input type="range" name="q5" id="q5" min="1" max="5" value="3" class="w-full">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">Aprenda explorando soluções práticas</span>
-            </div>
-        </div>
-    </form>
-
-    <button type="button" id="submitEmployerButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4">
-        Finalizar Questionário
-    </button>
-    
-    <div id="statusEmployerMessage" class="result-box hidden text-center mt-4"></div>
-</div>
-
-<script src="employerScript.js"></script>
 </body>
 </html>
