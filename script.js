@@ -27,7 +27,6 @@ window.showCandidateWelcome = function() {
     showScreen('candidateWelcomeScreen');
 }
 
-// **AQUI ESTÁ A FUNÇÃO CORRIGIDA**
 // Função para o botão Empregador
 window.showEmployerWelcome = function() {
     // Redireciona o usuário para a página do empregador
@@ -93,45 +92,92 @@ window.loginRecruiter = async function() {
     }
 }
 
-// Exibe todos os resultados
+// Exibe todos os resultados (agora buscando os dois)
 window.viewAllResults = async function() {
     showScreen('resultsView');
-    const resultsList = document.getElementById('resultsList');
+    const resultsContainer = document.getElementById('resultsView');
+    resultsContainer.innerHTML = ''; // Limpa o conteúdo
 
     try {
-        // CORREÇÃO: O nome da função para buscar resultados é getEmployerResults
-        const response = await fetch('/.netlify/functions/getEmployerResults');
+        // CORREÇÃO: Chamando a nova função para buscar os dois resultados
+        const response = await fetch('/.netlify/functions/getDashboardResults');
         if (!response.ok) throw new Error('Erro ao buscar os dados.');
 
-        let results = await response.json();
-        results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const allResults = await response.json();
+        const candidateResults = allResults.candidateResults || [];
+        const employerResults = allResults.employerResults || [];
 
-        if (results.length === 0) {
-            resultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado encontrado.</p>`;
-            return;
+        // Adiciona o botão de voltar ao topo
+        const backButtonHtml = `<button onclick="window.backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
+        resultsContainer.innerHTML += backButtonHtml;
+
+        // Cria a seção para os resultados do Colaborador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
+                <div id="candidateResultsList" class="space-y-4"></div>
+            </div>
+        `;
+        const candidateResultsList = document.getElementById('candidateResultsList');
+
+        if (candidateResults.length === 0) {
+            candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
+        } else {
+            candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            candidateResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
+                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                `;
+                candidateResultsList.appendChild(resultCard);
+            });
         }
 
-        resultsList.innerHTML = '';
-        results.forEach((data) => {
-            const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        // Cria a seção para os resultados do Empregador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
+                <div id="employerResultsList" class="space-y-4"></div>
+            </div>
+        `;
+        const employerResultsList = document.getElementById('employerResultsList');
 
-            const resultCard = document.createElement('div');
-            resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-            resultCard.innerHTML = `
-                <h3 class="font-bold text-lg text-gray-800 mb-2">Resultado da Avaliação (${date})</h3>
-                <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
-                <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
-            `;
-            resultsList.appendChild(resultCard);
-        });
+        if (employerResults.length === 0) {
+            employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
+        } else {
+            employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            employerResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
+                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                `;
+                employerResultsList.appendChild(resultCard);
+            });
+        }
 
     } catch (e) {
         console.error("Erro ao carregar resultados:", e);
-        resultsList.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
+        resultsContainer.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
     }
+}
+
+// Função para o botão de voltar ao dashboard
+window.backToRecruiterDashboard = function() {
+    showScreen('recruiterDashboard');
 }
 
 // Funções globais
