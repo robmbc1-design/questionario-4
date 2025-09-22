@@ -3,7 +3,7 @@ let isRecruiterProfile = false;
 
 // Função para alternar a visibilidade das telas
 window.showScreen = function(screenId) {
-    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
+    const screens = ['logoScreen', 'roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
     screens.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.classList.add('hidden');
@@ -11,6 +11,15 @@ window.showScreen = function(screenId) {
     const targetElement = document.getElementById(screenId);
     if (targetElement) targetElement.classList.remove('hidden');
 }
+
+// Inicializa a aplicação mostrando a tela da logo
+document.addEventListener('DOMContentLoaded', () => {
+    showScreen('logoScreen');
+    setTimeout(() => {
+        showScreen('roleSelectionScreen');
+    }, 3000); // 3 segundos para mostrar a logo
+});
+
 
 // Funções de navegação
 window.showRoleSelection = function() {
@@ -163,6 +172,11 @@ window.shuffleQuestions = function(formId) {
 }
 
 // Submissão do questionário do colaborador
+window.startQuestionnaire = function() {
+    showScreen('questionnaire');
+    document.getElementById('backFromQuestionnaireForCandidate').classList.remove('hidden');
+}
+
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
