@@ -3,90 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil Ideal de Candidato</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Perfil de Recrutamento - Empregador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-4xl w-full space-y-8">
-            <div class="mb-8">
-                <a href="index.html" class="flex items-center text-gray-600 hover:text-gray-800 transition duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Voltar
-                </a>
-            </div>
+    <div id="employerQuestionnaire" class="container mx-auto max-w-2xl mt-10 p-8 bg-white rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-blue-600 text-center mb-6">Questionário de Perfil da Empresa</h1>
+        <p class="text-gray-700 text-center mb-8">
+            Avalie o perfil de candidato ideal para sua empresa, ajustando as barras de acordo com a sua preferência.
+            A pontuação mais alta indica maior prioridade.
+        </p>
 
-            <div id="employerQuestionnaire" class="bg-white p-8 md:p-12 rounded-lg shadow-xl text-center transition duration-500 ease-in-out">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-                    Perfil Ideal de Candidato
-                </h2>
-                <p class="text-lg text-gray-600 mb-8">
-                    Avalie a importância de cada característica para o candidato ideal.
+        <form id="employerForm" class="space-y-6">
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">
+                    Prioridade no perfil **Inovador**
                 </p>
-
-                <form id="employerForm" class="space-y-6">
-                    <div>
-                        <input id="employerName" name="employerName" type="text" placeholder="Seu Nome" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-                    </div>
-                    <div>
-                        <input id="employerEmail" name="employerEmail" type="email" placeholder="Seu E-mail" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-                    </div>
-                    
-                    <div class="question-card">
-                        <p>1. O candidato ideal busca soluções ativamente para problemas complexos.</p>
-                        <input type="range" name="q1" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>2. O candidato ideal prefere trabalhar de forma autônoma e ter liberdade para inovar.</p>
-                        <input type="range" name="q2" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>3. O candidato ideal se adapta rapidamente a novas ferramentas e metodologias.</p>
-                        <input type="range" name="q3" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>4. O candidato ideal é focado e se destaca na execução de tarefas rotineiras.</p>
-                        <input type="range" name="q4" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>5. O candidato ideal é colaborativo e segue processos de forma eficiente.</p>
-                        <input type="range" name="q5" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>6. O candidato ideal propõe melhorias e novas ideias para o fluxo de trabalho.</p>
-                        <input type="range" name="q6" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>7. O candidato ideal valoriza um ambiente de trabalho estável e com regras claras.</p>
-                        <input type="range" name="q7" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>8. O candidato ideal não tem medo de falhar ao tentar algo novo.</p>
-                        <input type="range" name="q8" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>9. O candidato ideal prefere a segurança de um método comprovado a uma solução criativa.</p>
-                        <input type="range" name="q9" min="1" max="5" value="3">
-                    </div>
-                    <div class="question-card">
-                        <p>10. O candidato ideal se sente confortável com mudanças frequentes nas prioridades.</p>
-                        <input type="range" name="q10" min="1" max="5" value="3">
-                    </div>
-                    
-                    <button type="button" id="submitEmployerButton" onclick="submitEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Finalizar e Salvar
-                    </button>
-                </form>
-
-                <div id="statusEmployerMessage" class="hidden mt-6 p-4 rounded-lg text-center font-semibold"></div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Busca por adaptabilidade, proatividade e busca por soluções criativas.
+                </p>
+                <input type="range" name="inovadorScore" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <p class="text-center mt-2 text-gray-500">
+                    <span class="font-bold">Pontuação:</span> <span id="inovadorScoreValue">3</span>
+                </p>
             </div>
-        </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">
+                    Prioridade no perfil **Executor Estratégico**
+                </p>
+                <p class="text-gray-600 text-sm mb-4">
+                    Busca por foco, colaboração, atenção aos processos e execução eficiente de tarefas.
+                </p>
+                <input type="range" name="executorScore" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <p class="text-center mt-2 text-gray-500">
+                    <span class="font-bold">Pontuação:</span> <span id="executorScoreValue">3</span>
+                </p>
+            </div>
+
+            <div class="text-center mt-8">
+                <button type="button" onclick="submitEmployerResults()" id="submitEmployerButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                    Finalizar Avaliação
+                </button>
+            </div>
+        </form>
+
+        <div id="statusMessage" class="hidden text-center mt-6 p-4 rounded-lg"></div>
+
     </div>
 
-    <script src="employerScript.js"></script>
+    <script>
+        document.getElementById('employerForm').addEventListener('input', function(event) {
+            const target = event.target;
+            if (target.name === 'inovadorScore') {
+                document.getElementById('inovadorScoreValue').innerText = target.value;
+            } else if (target.name === 'executorScore') {
+                document.getElementById('executorScoreValue').innerText = target.value;
+            }
+        });
+    </script>
 
+    <script>
+        window.submitEmployerResults = async function() {
+            const form = document.getElementById('employerForm');
+            const submitButton = document.getElementById('submitEmployerButton');
+            const statusMessage = document.getElementById('statusMessage');
+
+            submitButton.disabled = true;
+            submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+
+            const inovadorScore = parseInt(form.querySelector('input[name="inovadorScore"]').value, 10);
+            const executorScore = parseInt(form.querySelector('input[name="executorScore"]').value, 10);
+
+            let profile = "", description = "";
+
+            if (inovadorScore > executorScore) {
+                profile = "Inovador";
+                description = "Sua empresa tem um perfil inovador, buscando soluções criativas e valorizando a autonomia. Você busca colaboradores que sejam agentes de mudança.";
+            } else if (executorScore > inovadorScore) {
+                profile = "Executor Estratégico";
+                description = "Sua empresa tem um perfil executor, com foco na eficiência, colaboração e processos bem definidos. Você busca colaboradores que garantam a execução das tarefas.";
+            } else {
+                profile = "Equilibrado";
+                description = "Sua empresa tem um perfil equilibrado, valorizando tanto a inovação quanto a execução. Você busca colaboradores que se adaptem a ambas as necessidades.";
+            }
+
+            try {
+                const response = await fetch('/.netlify/functions/saveEmployerProfile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        profile: profile,
+                        description: description,
+                        inovadorScore: inovadorScore,
+                        executorScore: executorScore
+                    })
+                });
+
+                if (!response.ok) throw new Error('Erro ao salvar os dados.');
+
+                statusMessage.classList.remove('hidden');
+                statusMessage.classList.add('bg-green-100', 'text-green-800');
+                statusMessage.innerHTML = `
+                    <p class="font-bold text-lg">Perfil da Empresa Salvo com Sucesso!</p>
+                    <p class="mt-2 text-md">Perfil: ${profile}</p>
+                    <p class="mt-2 text-md">Descrição: ${description}</p>
+                    <button onclick="window.location.href = 'index.html';" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>
+                `;
+                form.classList.add('hidden');
+
+            } catch (e) {
+                console.error("Erro ao salvar o resultado: ", e);
+                statusMessage.classList.remove('hidden');
+                statusMessage.classList.add('bg-red-100', 'text-red-800');
+                statusMessage.innerHTML = `<p class="font-bold text-lg">Houve um erro ao salvar os dados. Por favor, tente novamente.</p>`;
+                submitButton.disabled = false;
+                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        };
+    </script>
 </body>
 </html>
