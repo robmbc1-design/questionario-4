@@ -39,7 +39,7 @@ window.shuffleEmployerQuestions = function() {
     });
 }
 
-// Função para enviar os resultados
+// Função para enviar os resultados (agora com 10 perguntas)
 window.submitEmployerResults = async function() {
     const nameInput = document.getElementById('employerName').value.trim();
     const emailInput = document.getElementById('employerEmail').value.trim();
@@ -57,11 +57,10 @@ window.submitEmployerResults = async function() {
 
     const form = document.getElementById('employerForm');
 
-    // Lógica de pontuação corrigida para as 5 perguntas
+    // Lógica de pontuação corrigida para as 10 perguntas
     let inovadorScore = 0;
     let executorScore = 0;
-
-    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     
     for (const q of questionNames) {
         const slider = form.querySelector(`input[name="${q}"]`);
