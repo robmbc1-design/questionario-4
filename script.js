@@ -3,7 +3,7 @@ let isRecruiterProfile = false;
 
 // Função para alternar a visibilidade das telas
 window.showScreen = function(screenId) {
-    const screens = ['logoScreen', 'roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
+    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
     screens.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.classList.add('hidden');
@@ -11,15 +11,6 @@ window.showScreen = function(screenId) {
     const targetElement = document.getElementById(screenId);
     if (targetElement) targetElement.classList.remove('hidden');
 }
-
-// Inicializa a aplicação mostrando a tela da logo
-document.addEventListener('DOMContentLoaded', () => {
-    showScreen('logoScreen');
-    setTimeout(() => {
-        showScreen('roleSelectionScreen');
-    }, 3000); // 3 segundos para mostrar a logo
-});
-
 
 // Funções de navegação
 window.showRoleSelection = function() {
@@ -56,13 +47,13 @@ window.showRecruiterDashboard = function() {
             <h1 class="text-3xl font-bold text-blue-600 mb-6">Painel do Recrutador</h1>
             <p class="text-gray-700 mb-8">Escolha qual conjunto de resultados você deseja visualizar.</p>
             <div class="space-y-4">
-                <button onclick="window.viewCandidateResults()" class="w-full whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                <button onclick="window.viewCandidateResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
                     Ver Resultados dos Colaboradores
                 </button>
-                <button onclick="window.viewEmployerResults()" class="w-full whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                <button onclick="window.viewEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
                     Ver Resultados dos Empregadores
                 </button>
-                <button onclick="window.showRoleSelection()" class="w-full whitespace-nowrap bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 mt-4 shadow-md">
+                <button onclick="window.showRoleSelection()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 mt-4 shadow-md">
                     Sair
                 </button>
             </div>
@@ -141,9 +132,52 @@ window.displayResults = async function(type) {
     }
 }
 
-// Função para o botão de voltar ao dashboard
-window.backToRecruiterDashboard = function() {
-    showScreen('recruiterDashboard');
+window.startQuestionnaire = function(isRecruiter = false) {
+    showScreen('questionnaire');
+    shuffleQuestions('employeeForm');
+    document.getElementById('employeeForm').reset();
+    document.getElementById('statusMessage').classList.add('hidden');
+    document.getElementById('employeeForm').classList.remove('hidden');
+
+    const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
+    const backForRecruiter = document.getElementById('backFromQuestionnaire');
+    if (isRecruiter) {
+        backForRecruiter.classList.remove('hidden');
+        backForCandidate.classList.add('hidden');
+    } else {
+        backForRecruiter.classList.add('hidden');
+        backForCandidate.classList.remove('hidden');
+    }
+}
+
+// Login do recrutador (agora com autenticação no servidor)
+window.loginRecruiter = async function() {
+    const usernameInput = document.getElementById('username').value.trim();
+    const passwordInput = document.getElementById('password').value.trim();
+    const loginMessage = document.getElementById('loginMessage');
+    loginMessage.classList.add('hidden');
+
+    try {
+        const response = await fetch('/.netlify/functions/authenticateRecruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
+
+        if (response.ok) {
+            showScreen('recruiterDashboard');
+        } else {
+            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error("Erro na autenticação:", e);
+        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
+        loginMessage.classList.remove('hidden');
+    }
 }
 
 // Funções globais
@@ -172,11 +206,6 @@ window.shuffleQuestions = function(formId) {
 }
 
 // Submissão do questionário do colaborador
-window.startQuestionnaire = function() {
-    showScreen('questionnaire');
-    document.getElementById('backFromQuestionnaireForCandidate').classList.remove('hidden');
-}
-
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
