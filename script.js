@@ -99,7 +99,8 @@ window.viewAllResults = async function() {
     const resultsList = document.getElementById('resultsList');
 
     try {
-        const response = await fetch('/.netlify/functions/saveEmployerResults');
+        // CORREÇÃO: O nome da função para buscar resultados é getEmployerResults
+        const response = await fetch('/.netlify/functions/getEmployerResults');
         if (!response.ok) throw new Error('Erro ao buscar os dados.');
 
         let results = await response.json();
@@ -224,7 +225,11 @@ window.submitResults = async function() {
                 email: emailInput,
                 profile: profile,
                 description: description,
-                totalScore, inovadorScore, executorScore, especialistaScore
+                // CORREÇÃO: Sintaxe correta para o JSON
+                totalScore: totalScore,
+                inovadorScore: inovadorScore,
+                executorScore: executorScore,
+                especialistaScore: especialistaScore
             })
         });
 
@@ -234,12 +239,12 @@ window.submitResults = async function() {
         statusMessage.classList.add('bg-green-100', 'text-green-800');
 
         let successContent = isRecruiterProfile
-            ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-                <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
-            : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-                <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-                <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+                ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                  <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+                : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                  <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
 
         statusMessage.innerHTML = successContent;
         form.classList.add('hidden');
