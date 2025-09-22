@@ -16,42 +16,98 @@
         </p>
 
         <form id="employerForm" class="space-y-6">
-
+            
             <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
-                <p class="text-lg font-semibold text-gray-800 mb-2">
-                    Prioridade no perfil **Inovador**
-                </p>
-                <p class="text-gray-600 text-sm mb-4">
-                    Busca por adaptabilidade, proatividade e busca por soluções criativas.
-                </p>
+                <p class="text-lg font-semibold text-gray-800 mb-2">1. Eu busco profissionais proativos e que tomam a iniciativa.</p>
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Menos Importante</p>
-                    <input type="range" name="inovadorScore" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Mais Importante</p>
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q1" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
                 </div>
-                <p class="text-center mt-2 text-gray-500">
-                    <span class="font-bold">Pontuação:</span> <span id="inovadorScoreValue">3</span>
-                </p>
             </div>
 
             <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
-                <p class="text-lg font-semibold text-gray-800 mb-2">
-                    Prioridade no perfil **Executor Estratégico**
-                </p>
-                <p class="text-gray-600 text-sm mb-4">
-                    Busca por foco, colaboração, atenção aos processos e execução eficiente de tarefas.
-                </p>
+                <p class="text-lg font-semibold text-gray-800 mb-2">2. Valorizo a criatividade e a capacidade de resolver problemas de forma autônoma.</p>
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Menos Importante</p>
-                    <input type="range" name="executorScore" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Mais Importante</p>
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q2" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
                 </div>
-                <p class="text-center mt-2 text-gray-500">
-                    <span class="font-bold">Pontuação:</span> <span id="executorScoreValue">3</span>
-                </p>
             </div>
 
-            <div class="text-center mt-8">
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">3. Prefiro colaboradores que se sentem à vontade para assumir riscos calculados.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q3" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">4. Gosto que os membros da equipe questionem o status quo e busquem novas abordagens.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q4" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">5. Minha empresa se destaca por ser ágil e adaptável às mudanças do mercado.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q5" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">6. Eu busco profissionais focados em resultados e que seguem processos de forma eficiente.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q6" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">7. Valorizo colaboradores que trabalham bem em equipe e com metas claras.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q7" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">8. Prefiro que as tarefas sejam concluídas no prazo, com atenção aos detalhes.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q8" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">9. Gosto de ter certeza de que as operações diárias são estáveis e previsíveis.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q9" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-sm">
+                <p class="text-lg font-semibold text-gray-800 mb-2">10. Minha empresa prospera com uma estrutura e planejamento bem definidos.</p>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mb-2 md:mb-0">Discordo totalmente</p>
+                    <input type="range" name="q10" min="1" max="5" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-sm text-gray-600 flex-shrink-0 mt-2 md:mt-0">Concordo totalmente</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-8 space-y-4">
                 <button type="button" onclick="submitEmployerResults()" id="submitEmployerButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
                     Finalizar Avaliação
                 </button>
@@ -59,19 +115,12 @@
         </form>
 
         <div id="statusMessage" class="hidden text-center mt-6 p-4 rounded-lg"></div>
+        
+        <button onclick="window.location.href = 'index.html';" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 mt-4">
+            Voltar ao Início
+        </button>
 
     </div>
-
-    <script>
-        document.getElementById('employerForm').addEventListener('input', function(event) {
-            const target = event.target;
-            if (target.name === 'inovadorScore') {
-                document.getElementById('inovadorScoreValue').innerText = target.value;
-            } else if (target.name === 'executorScore') {
-                document.getElementById('executorScoreValue').innerText = target.value;
-            }
-        });
-    </script>
 
     <script>
         window.submitEmployerResults = async function() {
@@ -83,8 +132,21 @@
             submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
             submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
 
-            const inovadorScore = parseInt(form.querySelector('input[name="inovadorScore"]').value, 10);
-            const executorScore = parseInt(form.querySelector('input[name="executorScore"]').value, 10);
+            let inovadorScore = 0;
+            let executorScore = 0;
+
+            const inovadorQuestions = ['q1', 'q2', 'q3', 'q4', 'q5'];
+            const executorQuestions = ['q6', 'q7', 'q8', 'q9', 'q10'];
+
+            inovadorQuestions.forEach(q => {
+                const slider = form.querySelector(`input[name="${q}"]`);
+                if (slider) inovadorScore += parseInt(slider.value, 10);
+            });
+
+            executorQuestions.forEach(q => {
+                const slider = form.querySelector(`input[name="${q}"]`);
+                if (slider) executorScore += parseInt(slider.value, 10);
+            });
 
             let profile = "", description = "";
 
