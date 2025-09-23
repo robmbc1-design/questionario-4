@@ -43,75 +43,74 @@ window.shuffleEmployerQuestions = function() {
 window.submitEmployerResults = async function() {
     const nameInput = document.getElementById('employerName').value.trim();
     const emailInput = document.getElementById('employerEmail').value.trim();
-    const submitButton = document.getElementById('submitEmployerButton');
-    const statusMessage = document.getElementById('statusEmployerMessage');
 
     if (!nameInput || !emailInput) {
-        window.showModal("Por favor, preencha nome e e-mail.");
+        showModal("Por favor, preencha seu nome e e-mail antes de continuar.");
         return;
     }
 
+    const submitButton = document.getElementById('submitEmployerButton');
     submitButton.disabled = true;
-    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
     submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
 
     const form = document.getElementById('employerForm');
+    const statusMessage = document.getElementById('statusEmployerMessage');
 
-    // Lógica de pontuação corrigida para as 5 perguntas
     let inovadorScore = 0;
     let executorScore = 0;
 
-    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5'];
-    
-    for (const q of questionNames) {
+    const questions = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
+
+    questions.forEach(q => {
         const slider = form.querySelector(`input[name="${q}"]`);
         const value = parseInt(slider.value, 10);
         
+        // A lógica de pontuação é aprimorada:
+        // O valor do slider contribui diretamente para o perfil 'Inovador'.
         inovadorScore += value;
+        // O valor inverso do slider (6-valor) contribui para o perfil 'Executor'.
         executorScore += (6 - value);
-    }
+    });
 
-    let profile = "";
-    let description = "";
+    let profile = "", description = "";
 
+    // A descrição do perfil agora se baseia na maior pontuação
     if (inovadorScore > executorScore) {
-        profile = "Perfil Inovador";
-        description = "O empregador busca um profissional proativo, com alta capacidade de adaptação e que tome a iniciativa para propor e executar novas ideias.";
+        profile = "Perfil Desejado: O Inovador";
+        description = "Você busca um profissional proativo, que se adapta facilmente e toma a iniciativa. Valoriza a inovação e a autonomia para resolver problemas complexos e propor novas ideias.";
     } else if (executorScore > inovadorScore) {
-        profile = "Perfil Executor";
-        description = "O empregador busca um profissional focado, que valoriza a organização, a execução precisa de tarefas e o trabalho em equipe com base em processos bem definidos.";
+        profile = "Perfil Desejado: O Executor Estratégico";
+        description = "Você busca um profissional focado e confiável. Valoriza a execução de tarefas com precisão, a colaboração em equipe e a manutenção da estabilidade e eficiência da operação.";
     } else {
-        profile = "Perfil Equilibrado";
-        description = "O empregador busca um profissional com um equilíbrio entre a capacidade de inovar e a habilidade de executar tarefas de forma organizada.";
+        profile = "Perfil Desejado: Equilíbrio";
+        description = "Você busca um profissional com um equilíbrio entre inovação e execução. Valoriza tanto a capacidade de seguir processos quanto a de se adaptar e propor soluções criativas.";
     }
     
     try {
-        const response = await fetch('/.netlify/functions/saveEmployerProfile', {
+        const response = await fetch('/.netlify/functions/saveEmployerResult', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: nameInput,
                 email: emailInput,
-                profile,
-                description,
-                inovadorScore,
-                executorScore
+                profile: profile,
+                description: description,
+                inovadorScore: inovadorScore,
+                executorScore: executorScore,
             })
         });
 
-        if (!response.ok) throw new Error('Erro ao salvar o perfil.');
+        if (!response.ok) throw new Error('Erro ao salvar os dados.');
 
         statusMessage.classList.remove('hidden');
-        statusMessage.classList.add('bg-green-100', 'text-green-800');
-        statusMessage.innerHTML = `
-            <p class="font-bold text-lg">Perfil Ideal salvo com sucesso!</p>
-            <p class="mt-2 text-md">O perfil desejado para o candidato foi armazenado.</p>
-            <button onclick="window.location.reload()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Painel</button>
-        `;
+        statusMessage.classList.add('bg-green-100', 'text-green-800', 'p-4');
+        statusMessage.innerHTML = `<p class="font-bold">${profile}</p><p class="mt-2">${description}</p>`;
         form.classList.add('hidden');
+
     } catch (e) {
-        console.error("Erro ao salvar o perfil:", e);
-        window.showModal("Houve um erro ao salvar o perfil. Por favor, tente novamente.");
+        console.error("Erro ao salvar o resultado: ", e);
+        showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
         submitButton.disabled = false;
         submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
         submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
