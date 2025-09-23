@@ -44,6 +44,19 @@ window.showRecruiterDashboard = function() {
     window.viewAllResults();
 }
 
+// 🚀 Função de logout do recrutador
+window.logoutRecruiter = function() {
+    isRecruiterProfile = false;
+    showScreen('recruiterLoginScreen');
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+}
+
+// Reset automático ao sair ou recarregar a página
+window.addEventListener("beforeunload", () => {
+    isRecruiterProfile = false;
+});
+
 window.startQuestionnaire = function(isRecruiter = false) {
     showScreen('questionnaire');
     shuffleQuestions('employeeForm');
