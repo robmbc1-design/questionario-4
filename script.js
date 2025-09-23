@@ -34,6 +34,7 @@ window.showEmployerWelcome = function() {
 }
 
 window.showRecruiterLogin = function() {
+    // Mantive a mesma lógica original (isso indica que o usuário selecionou perfil recrutador)
     isRecruiterProfile = true;
     showScreen('recruiterLoginScreen');
 }
@@ -44,34 +45,45 @@ window.showRecruiterDashboard = function() {
     window.viewAllResults();
 }
 
-// 🚀 Função de logout do recrutador
+// --- Função de logout do recrutador (ADICIONADA)
 window.logoutRecruiter = function() {
     isRecruiterProfile = false;
     showScreen('recruiterLoginScreen');
     const loginForm = document.getElementById('recruiterLoginForm');
     if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
-// Reset automático ao sair ou recarregar a página
+// Reset automático ao sair ou recarregar a página (ADICIONADO)
 window.addEventListener("beforeunload", () => {
     isRecruiterProfile = false;
+});
+
+// Garante tela inicial consistente ao carregar (ADICIONADO)
+window.addEventListener("load", () => {
+    // Ao recarregar a página, garantir que retornamos à seleção de perfil
+    isRecruiterProfile = false;
+    showScreen('roleSelectionScreen');
 });
 
 window.startQuestionnaire = function(isRecruiter = false) {
     showScreen('questionnaire');
     shuffleQuestions('employeeForm');
-    document.getElementById('employeeForm').reset();
-    document.getElementById('statusMessage').classList.add('hidden');
-    document.getElementById('employeeForm').classList.remove('hidden');
+    const employeeFormEl = document.getElementById('employeeForm');
+    if (employeeFormEl) employeeFormEl.reset();
+    const statusMessageEl = document.getElementById('statusMessage');
+    if (statusMessageEl) statusMessageEl.classList.add('hidden');
+    if (employeeFormEl) employeeFormEl.classList.remove('hidden');
 
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
     if (isRecruiter) {
-        backForRecruiter.classList.remove('hidden');
-        backForCandidate.classList.add('hidden');
+        if (backForRecruiter) backForRecruiter.classList.remove('hidden');
+        if (backForCandidate) backForCandidate.classList.add('hidden');
     } else {
-        backForRecruiter.classList.add('hidden');
-        backForCandidate.classList.remove('hidden');
+        if (backForRecruiter) backForRecruiter.classList.add('hidden');
+        if (backForCandidate) backForCandidate.classList.remove('hidden');
     }
 }
 
@@ -80,7 +92,7 @@ window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
     const loginMessage = document.getElementById('loginMessage');
-    loginMessage.classList.add('hidden');
+    if (loginMessage) loginMessage.classList.add('hidden');
 
     try {
         const response = await fetch('/.netlify/functions/authenticateRecruiter', {
@@ -93,15 +105,20 @@ window.loginRecruiter = async function() {
         });
 
         if (response.ok) {
-            showScreen('recruiterDashboard');
+            // Chamamos a função existente que já seta o estado e carrega os resultados
+            window.showRecruiterDashboard();
         } else {
-            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
-            loginMessage.classList.remove('hidden');
+            if (loginMessage) {
+                loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+                loginMessage.classList.remove('hidden');
+            }
         }
     } catch (e) {
         console.error("Erro na autenticação:", e);
-        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
-        loginMessage.classList.remove('hidden');
+        if (loginMessage) {
+            loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
+            loginMessage.classList.remove('hidden');
+        }
     }
 }
 
@@ -109,6 +126,7 @@ window.loginRecruiter = async function() {
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsContainer = document.getElementById('resultsView');
+    if (!resultsContainer) return;
     resultsContainer.innerHTML = ''; // Limpa o conteúdo
 
     try {
@@ -133,24 +151,26 @@ window.viewAllResults = async function() {
         `;
         const candidateResultsList = document.getElementById('candidateResultsList');
 
-        if (candidateResults.length === 0) {
-            candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
-        } else {
-            candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            candidateResults.forEach(data => {
-                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
-                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                    <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
-                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
-                `;
-                candidateResultsList.appendChild(resultCard);
-            });
+        if (candidateResultsList) {
+            if (candidateResults.length === 0) {
+                candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
+            } else {
+                candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                candidateResults.forEach(data => {
+                    const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    const resultCard = document.createElement('div');
+                    resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                    resultCard.innerHTML = `
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                        <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                        <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                        <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                        <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
+                        <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                    `;
+                    candidateResultsList.appendChild(resultCard);
+                });
+            }
         }
 
         // Cria a seção para os resultados do Empregador
@@ -162,24 +182,26 @@ window.viewAllResults = async function() {
         `;
         const employerResultsList = document.getElementById('employerResultsList');
 
-        if (employerResults.length === 0) {
-            employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
-        } else {
-            employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            employerResults.forEach(data => {
-                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
-                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                    <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
-                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
-                `;
-                employerResultsList.appendChild(resultCard);
-            });
+        if (employerResultsList) {
+            if (employerResults.length === 0) {
+                employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
+            } else {
+                employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                employerResults.forEach(data => {
+                    const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    const resultCard = document.createElement('div');
+                    resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                    resultCard.innerHTML = `
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                        <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                        <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                        <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                        <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
+                        <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                    `;
+                    employerResultsList.appendChild(resultCard);
+                });
+            }
         }
 
     } catch (e) {
@@ -200,6 +222,7 @@ window.showModal = function(message) {
 
 window.shuffleQuestions = function(formId) {
     const form = document.getElementById(formId);
+    if (!form) return;
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
 
     for (let i = questionCards.length - 1; i > 0; i--) {
@@ -229,9 +252,11 @@ window.submitResults = async function() {
     }
 
     const submitButton = document.getElementById('submitButton');
-    submitButton.disabled = true;
-    submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+    }
 
     const form = document.getElementById('employeeForm');
     const statusMessage = document.getElementById('statusMessage');
@@ -294,37 +319,45 @@ window.submitResults = async function() {
 
         if (!response.ok) throw new Error('Erro ao salvar os dados.');
 
-        statusMessage.classList.remove('hidden');
-        statusMessage.classList.add('bg-green-100', 'text-green-800');
+        if (statusMessage) {
+            statusMessage.classList.remove('hidden');
+            statusMessage.classList.add('bg-green-100', 'text-green-800');
 
-        let successContent = isRecruiterProfile
-                ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-                  <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
-                : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-                  <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+            let successContent = isRecruiterProfile
+                    ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                      <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                      <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+                    : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                      <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                      <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
 
-        statusMessage.innerHTML = successContent;
-        form.classList.add('hidden');
+            statusMessage.innerHTML = successContent;
+        }
+
+        if (form) form.classList.add('hidden');
     } catch (e) {
         console.error("Erro ao salvar o resultado: ", e);
         showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
-        submitButton.disabled = false;
-        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
     }
 }
 
 window.resetQuestionnaire = function() {
     const form = document.getElementById('employeeForm');
-    form.reset();
-    form.classList.remove('hidden');
-    document.getElementById('statusMessage').classList.add('hidden');
+    if (form) form.reset();
+    if (form) form.classList.remove('hidden');
+    const statusMessage = document.getElementById('statusMessage');
+    if (statusMessage) statusMessage.classList.add('hidden');
     const submitButton = document.getElementById('submitButton');
-    submitButton.disabled = false;
-    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
 
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
