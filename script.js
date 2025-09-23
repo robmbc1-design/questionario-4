@@ -11,24 +11,15 @@ window.showScreen = function(screenId) {
     const targetElement = document.getElementById(screenId);
     if (targetElement) targetElement.classList.remove('hidden');
 }
-window.clearRecruiterLogin = function() {
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    if (usernameInput) usernameInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-}
+
 // Funções de navegação
 window.showRoleSelection = function() {
-    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
-    screens.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.classList.add('hidden');
-    });
-    const targetElement = document.getElementById(screenId);
-    if (targetElement) targetElement.classList.remove('hidden');
-
-    // Esta é a linha que você deve adicionar:
-    window.clearRecruiterLogin();
+    isRecruiterProfile = false;
+    showScreen('roleSelectionScreen');
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
 window.showCandidateWelcome = function() {
@@ -325,4 +316,3 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
-
