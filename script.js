@@ -41,95 +41,7 @@ window.showRecruiterLogin = function() {
 window.showRecruiterDashboard = function() {
     isRecruiterProfile = true;
     showScreen('recruiterDashboard');
-    // Adiciona os botões de visualização separados
-    document.getElementById('recruiterDashboard').innerHTML = `
-        <div class="p-8 text-center bg-white rounded-lg shadow-xl">
-            <h1 class="text-3xl font-bold text-blue-600 mb-6">Painel do Recrutador</h1>
-            <p class="text-gray-700 mb-8">Escolha qual conjunto de resultados você deseja visualizar.</p>
-            <div class="space-y-4">
-                <button onclick="window.viewCandidateResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
-                    Ver Resultados dos Colaboradores
-                </button>
-                <button onclick="window.viewEmployerResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
-                    Ver Resultados dos Empregadores
-                </button>
-                <button onclick="window.showRoleSelection()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 mt-4 shadow-md">
-                    Sair
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// Funções para exibir resultados específicos
-window.viewCandidateResults = async function() {
-    await displayResults('candidate');
-}
-
-window.viewEmployerResults = async function() {
-    await displayResults('employer');
-}
-
-window.displayResults = async function(type) {
-    showScreen('resultsView');
-    const resultsContainer = document.getElementById('resultsView');
-    resultsContainer.innerHTML = '';
-
-    try {
-        const response = await fetch('/.netlify/functions/getDashboardResults');
-        if (!response.ok) throw new Error('Erro ao buscar os dados.');
-
-        const allResults = await response.json();
-        const results = type === 'candidate' ? allResults.candidateResults : allResults.employerResults;
-
-        const backButtonHtml = `<button onclick="window.showRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4 mb-8">Voltar para o Dashboard</button>`;
-        resultsContainer.innerHTML += backButtonHtml;
-
-        let title = type === 'candidate' ? "Resultados dos Colaboradores" : "Resultados dos Empregadores";
-        let listId = type === 'candidate' ? "candidateResultsList" : "employerResultsList";
-        let noResultsMessage = type === 'candidate' ? "Nenhum resultado de colaborador encontrado." : "Nenhum resultado de empregador encontrado.";
-
-        resultsContainer.innerHTML += `
-            <div class="mt-8">
-                <h2 class="text-2xl font-bold mb-4">${title}</h2>
-                <div id="${listId}" class="space-y-4"></div>
-            </div>
-        `;
-
-        const resultsList = document.getElementById(listId);
-
-        if (results.length === 0) {
-            resultsList.innerHTML = `<p class="text-center text-gray-500">${noResultsMessage}</p>`;
-        } else {
-            results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            results.forEach(data => {
-                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-
-                let innerHtml = `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
-                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                `;
-
-                if (type === 'candidate') {
-                    innerHtml += `<p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                                 <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
-                                 <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>`;
-                } else {
-                    innerHtml += `<p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                                 <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
-                                 <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>`;
-                }
-                resultCard.innerHTML = innerHtml;
-                resultsList.appendChild(resultCard);
-            });
-        }
-    } catch (e) {
-        console.error("Erro ao carregar resultados:", e);
-        resultsContainer.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
-    }
+    window.viewAllResults();
 }
 
 window.startQuestionnaire = function(isRecruiter = false) {
@@ -178,6 +90,94 @@ window.loginRecruiter = async function() {
         loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
         loginMessage.classList.remove('hidden');
     }
+}
+
+// Exibe todos os resultados (agora buscando os dois)
+window.viewAllResults = async function() {
+    showScreen('resultsView');
+    const resultsContainer = document.getElementById('resultsView');
+    resultsContainer.innerHTML = ''; // Limpa o conteúdo
+
+    try {
+        // CORREÇÃO: Chamando a nova função para buscar os dois resultados
+        const response = await fetch('/.netlify/functions/getDashboardResults');
+        if (!response.ok) throw new Error('Erro ao buscar os dados.');
+
+        const allResults = await response.json();
+        const candidateResults = allResults.candidateResults || [];
+        const employerResults = allResults.employerResults || [];
+
+        // Adiciona o botão de voltar ao topo
+        const backButtonHtml = `<button onclick="window.backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
+        resultsContainer.innerHTML += backButtonHtml;
+
+        // Cria a seção para os resultados do Colaborador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
+                <div id="candidateResultsList" class="space-y-4"></div>
+            </div>
+        `;
+        const candidateResultsList = document.getElementById('candidateResultsList');
+
+        if (candidateResults.length === 0) {
+            candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
+        } else {
+            candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            candidateResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
+                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                `;
+                candidateResultsList.appendChild(resultCard);
+            });
+        }
+
+        // Cria a seção para os resultados do Empregador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
+                <div id="employerResultsList" class="space-y-4"></div>
+            </div>
+        `;
+        const employerResultsList = document.getElementById('employerResultsList');
+
+        if (employerResults.length === 0) {
+            employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
+        } else {
+            employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            employerResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
+                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                `;
+                employerResultsList.appendChild(resultCard);
+            });
+        }
+
+    } catch (e) {
+        console.error("Erro ao carregar resultados:", e);
+        resultsContainer.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
+    }
+}
+
+// Função para o botão de voltar ao dashboard
+window.backToRecruiterDashboard = function() {
+    showScreen('recruiterDashboard');
 }
 
 // Funções globais
