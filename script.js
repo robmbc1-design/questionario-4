@@ -29,41 +29,45 @@ window.showCandidateWelcome = function() {
 
 // Função para o botão Empregador
 window.showEmployerWelcome = function() {
+    // Redireciona o usuário para a página do empregador
     window.location.href = 'employer.html';
 }
 
-// Login recrutador - abre tela de login e limpa o form
 window.showRecruiterLogin = function() {
     isRecruiterProfile = true;
     showScreen('recruiterLoginScreen');
-    const loginForm = document.getElementById('recruiterLoginForm');
-    if (loginForm) loginForm.reset();
-    const loginMessage = document.getElementById('loginMessage');
-    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
-// Dashboard recrutador
 window.showRecruiterDashboard = function() {
     isRecruiterProfile = true;
     showScreen('recruiterDashboard');
+    window.viewAllResults();
 }
 
-// Logout do recrutador
-window.logoutRecruiter = function() {
-    isRecruiterProfile = false;
-    showScreen('recruiterLoginScreen');
-    const loginForm = document.getElementById('recruiterLoginForm');
-    if (loginForm) loginForm.reset();
-    const loginMessage = document.getElementById('loginMessage');
-    if (loginMessage) loginMessage.classList.add('hidden');
+window.startQuestionnaire = function(isRecruiter = false) {
+    showScreen('questionnaire');
+    shuffleQuestions('employeeForm');
+    document.getElementById('employeeForm').reset();
+    document.getElementById('statusMessage').classList.add('hidden');
+    document.getElementById('employeeForm').classList.remove('hidden');
+
+    const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
+    const backForRecruiter = document.getElementById('backFromQuestionnaire');
+    if (isRecruiter) {
+        backForRecruiter.classList.remove('hidden');
+        backForCandidate.classList.add('hidden');
+    } else {
+        backForRecruiter.classList.add('hidden');
+        backForCandidate.classList.remove('hidden');
+    }
 }
 
-// Login do recrutador (autenticação)
+// Login do recrutador (agora com autenticação no servidor)
 window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
     const loginMessage = document.getElementById('loginMessage');
-    if (loginMessage) loginMessage.classList.add('hidden');
+    loginMessage.classList.add('hidden');
 
     try {
         const response = await fetch('/.netlify/functions/authenticateRecruiter', {
@@ -76,31 +80,26 @@ window.loginRecruiter = async function() {
         });
 
         if (response.ok) {
-            isRecruiterProfile = true;
-            // Vai para dashboard (não mostra resultados direto)
-            window.showRecruiterDashboard();
+            showScreen('recruiterDashboard');
         } else {
-            if (loginMessage) {
-                loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
-                loginMessage.classList.remove('hidden');
-            }
+            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.classList.remove('hidden');
         }
     } catch (e) {
         console.error("Erro na autenticação:", e);
-        if (loginMessage) {
-            loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
-            loginMessage.classList.remove('hidden');
-        }
+        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
+        loginMessage.classList.remove('hidden');
     }
 }
 
-// Exibe todos os resultados
+// Exibe todos os resultados (agora buscando os dois)
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsContainer = document.getElementById('resultsView');
     resultsContainer.innerHTML = ''; // Limpa o conteúdo
 
     try {
+        // CORREÇÃO: Chamando a nova função para buscar os dois resultados
         const response = await fetch('/.netlify/functions/getDashboardResults');
         if (!response.ok) throw new Error('Erro ao buscar os dados.');
 
@@ -108,11 +107,17 @@ window.viewAllResults = async function() {
         const candidateResults = allResults.candidateResults || [];
         const employerResults = allResults.employerResults || [];
 
+        // Adiciona o botão de voltar ao topo
         const backButtonHtml = `<button onclick="window.backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
         resultsContainer.innerHTML += backButtonHtml;
 
-        // Resultados Colaborador
-        resultsContainer.innerHTML += `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2><div id="candidateResultsList" class="space-y-4"></div></div>`;
+        // Cria a seção para os resultados do Colaborador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
+                <div id="candidateResultsList" class="space-y-4"></div>
+            </div>
+        `;
         const candidateResultsList = document.getElementById('candidateResultsList');
 
         if (candidateResults.length === 0) {
@@ -123,18 +128,25 @@ window.viewAllResults = async function() {
                 const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                 const resultCard = document.createElement('div');
                 resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `<h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
                     <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
                     <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
                     <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
                     <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
-                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>`;
+                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                `;
                 candidateResultsList.appendChild(resultCard);
             });
         }
 
-        // Resultados Empregador
-        resultsContainer.innerHTML += `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2><div id="employerResultsList" class="space-y-4"></div></div>`;
+        // Cria a seção para os resultados do Empregador
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
+                <div id="employerResultsList" class="space-y-4"></div>
+            </div>
+        `;
         const employerResultsList = document.getElementById('employerResultsList');
 
         if (employerResults.length === 0) {
@@ -145,12 +157,14 @@ window.viewAllResults = async function() {
                 const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                 const resultCard = document.createElement('div');
                 resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `<h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
                     <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
                     <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
                     <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
                     <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
-                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>`;
+                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                `;
                 employerResultsList.appendChild(resultCard);
             });
         }
@@ -161,7 +175,7 @@ window.viewAllResults = async function() {
     }
 }
 
-// Botão voltar ao dashboard
+// Função para o botão de voltar ao dashboard
 window.backToRecruiterDashboard = function() {
     showScreen('recruiterDashboard');
 }
@@ -191,7 +205,7 @@ window.shuffleQuestions = function(formId) {
     });
 }
 
-// Submissão do questionário
+// Submissão do questionário do colaborador
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
@@ -210,7 +224,7 @@ window.submitResults = async function() {
     const statusMessage = document.getElementById('statusMessage');
 
     let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
-    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     const questionCategories = {
         'q1': { inovador: true, especialista: true },
         'q2': { inovador: true },
@@ -257,6 +271,7 @@ window.submitResults = async function() {
                 email: emailInput,
                 profile: profile,
                 description: description,
+                // CORREÇÃO: Sintaxe correta para o JSON
                 totalScore: totalScore,
                 inovadorScore: inovadorScore,
                 executorScore: executorScore,
@@ -301,15 +316,3 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
-
-// Reseta ao recarregar a página
-window.addEventListener("load", () => {
-    isRecruiterProfile = false;
-    const loginForm = document.getElementById('recruiterLoginForm');
-    if (loginForm) loginForm.reset();
-    showRoleSelection();
-});
-
-window.addEventListener("beforeunload", () => {
-    isRecruiterProfile = false;
-});
