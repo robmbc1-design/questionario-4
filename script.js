@@ -12,14 +12,26 @@ window.showScreen = function(screenId) {
     if (targetElement) targetElement.classList.remove('hidden');
 }
 
-// Funções de navegação
-window.showRoleSelection = function() {
+// *** CÓDIGO NOVO: FUNÇÃO PARA DESLOGAR O RECRUTADOR ***
+window.logoutRecruiter = function() {
     isRecruiterProfile = false;
-    showScreen('roleSelectionScreen');
+    // Se você armazena o token de autenticação no localStorage/sessionStorage, limpe-o aqui
+    localStorage.removeItem('recruiterAuthToken');
+    sessionStorage.removeItem('recruiterAuthToken');
+    
+    // Limpa o formulário de login
     const loginForm = document.getElementById('recruiterLoginForm');
     if (loginForm) loginForm.reset();
+    
     const loginMessage = document.getElementById('loginMessage');
     if (loginMessage) loginMessage.classList.add('hidden');
+}
+
+// Funções de navegação
+window.showRoleSelection = function() {
+    // *** CÓDIGO ALTERADO: AGORA CHAMA A FUNÇÃO DE LOGOUT ***
+    logoutRecruiter(); 
+    showScreen('roleSelectionScreen');
 }
 
 window.showCandidateWelcome = function() {
