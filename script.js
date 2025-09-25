@@ -12,12 +12,15 @@ window.showScreen = function(screenId) {
     if (targetElement) targetElement.classList.remove('hidden');
 }
 
-// *** CÓDIGO NOVO: FUNÇÃO PARA DESLOGAR O RECRUTADOR ***
+// *** CÓDIGO NOVO: FUNÇÃO PARA DESLOGAR O RECRUTADOR E LIMPAR A SESSÃO SUPABASE ***
 window.logoutRecruiter = function() {
     isRecruiterProfile = false;
-    // Se você armazena o token de autenticação no localStorage/sessionStorage, limpe-o aqui
-    localStorage.removeItem('recruiterAuthToken');
-    sessionStorage.removeItem('recruiterAuthToken');
+    
+    // Usa a função de logout do Supabase para limpar a sessão
+    // Certifique-se de que a variável 'supabase' está inicializada e acessível
+    if (typeof supabase !== 'undefined') {
+        supabase.auth.signOut();
+    }
     
     // Limpa o formulário de login
     const loginForm = document.getElementById('recruiterLoginForm');
@@ -74,32 +77,34 @@ window.startQuestionnaire = function(isRecruiter = false) {
     }
 }
 
-// Login do recrutador (agora com autenticação no servidor)
+// *** CÓDIGO ALTERADO: LOGIN DO RECRUTADOR COM AUTENTICAÇÃO SUPABASE ***
 window.loginRecruiter = async function() {
-    const usernameInput = document.getElementById('username').value.trim();
+    const emailInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
     const loginMessage = document.getElementById('loginMessage');
     loginMessage.classList.add('hidden');
 
     try {
-        const response = await fetch('/.netlify/functions/authenticateRecruiter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: usernameInput,
-                password: passwordInput
-            })
+        const { error } = await supabase.auth.signInWithPassword({
+            email: emailInput,
+            password: passwordInput,
         });
 
-        if (response.ok) {
-            showScreen('recruiterDashboard');
-        } else {
-            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+        if (error) {
+            console.error("Erro no login:", error);
+            if (error.message.includes('Invalid login credentials')) {
+                loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            } else {
+                loginMessage.innerText = 'Erro ao conectar. Tente novamente mais tarde.';
+            }
             loginMessage.classList.remove('hidden');
+        } else {
+            // Login bem-sucedido
+            showScreen('recruiterDashboard');
         }
     } catch (e) {
-        console.error("Erro na autenticação:", e);
-        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
+        console.error("Erro inesperado:", e);
+        loginMessage.innerText = 'Ocorreu um erro. Verifique sua conexão e tente novamente.';
         loginMessage.classList.remove('hidden');
     }
 }
