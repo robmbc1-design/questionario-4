@@ -1,3 +1,9 @@
+// No topo do seu arquivo script.js
+const SUPABASE_URL = https://pplnhiphmiivppvgacwm.supabase.co;
+const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbG5oaXBobWlpdnBwdmdhY3dtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc0Mzk1OSwiZXhwIjoyMDcyMzE5OTU5fQ.SjNnya1rUVcQsCXpAXADEfRxsD3GV3Y2S9RCpNhdASs;
+
+const { createClient } = supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Credenciais e perfil
 let isRecruiterProfile = false;
 
@@ -333,3 +339,4 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+
