@@ -14,23 +14,61 @@ exports.handler = async (event) => {
     try {
         const data = JSON.parse(event.body);
 
-        // Upsert: insere ou atualiza se já existir o email
-        const { error } = await supabase
+        // Gera timestamp no horário de Brasília
+        const timestamp = new Date().toLocaleString('sv', { timeZone: 'America/Sao_Paulo' });
+
+        // 1. Verifica se já existe registro com o mesmo email
+        const { data: existing, error: selectError } = await supabase
             .from('questionario_resultados')
-            .upsert([{
-                name: data.name,
-                email: data.email,
-                profile: data.profile,
-                description: data.description,
-                totalScore: data.totalScore,
-                inovadorScore: data.inovadorScore,
-                executorScore: data.executorScore,
-                especialistaScore: data.especialistaScore,
-                timestamp: new Date().toISOString()
-            }], { onConflict: ['email'] }); // CORRETO
+            .select('id')
+            .eq('email', data.email)
+            .maybeSingle();
+
+        if (selectError) {
+            console.error("Erro ao verificar registro existente:", selectError);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'Erro ao verificar registro existente.' })
+            };
+        }
+
+        let error;
+        if (existing) {
+            // 2. Se já existe → update (inclui atualização de timestamp)
+            ({ error } = await supabase
+                .from('questionario_resultados')
+                .update({
+                    name: data.name,
+                    profile: data.profile,
+                    description: data.description,
+                    totalScore: data.totalScore,
+                    inovadorScore: data.inovadorScore,
+                    executorScore: data.executorScore,
+                    especialistaScore: data.especialistaScore,
+                    timestamp: timestamp
+                })
+                .eq('email', data.email)
+            );
+        } else {
+            // 3. Se não existe → insert (inclui timestamp)
+            ({ error } = await supabase
+                .from('questionario_resultados')
+                .insert([{
+                    name: data.name,
+                    email: data.email,
+                    profile: data.profile,
+                    description: data.description,
+                    totalScore: data.totalScore,
+                    inovadorScore: data.inovadorScore,
+                    executorScore: data.executorScore,
+                    especialistaScore: data.especialistaScore,
+                    timestamp: timestamp
+                }])
+            );
+        }
 
         if (error) {
-            console.error("Erro no Supabase:", error);
+            console.error("Erro ao salvar no Supabase:", error);
             return {
                 statusCode: 500,
                 body: JSON.stringify({ error: error.message, details: error.details })
@@ -41,6 +79,7 @@ exports.handler = async (event) => {
             statusCode: 200,
             body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
         };
+
     } catch (e) {
         console.error("Erro na função:", e);
         return {
