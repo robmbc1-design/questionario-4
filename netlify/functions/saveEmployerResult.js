@@ -1,11 +1,10 @@
+// Arquivo: netlify/functions/saveEmpolyResult.js
 const { createClient } = require('@supabase/supabase-js');
 
-// Configuração do Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Inicializa o cliente Supabase com a chave de serviço
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
@@ -15,6 +14,9 @@ exports.handler = async (event) => {
     try {
         const data = JSON.parse(event.body);
 
+        // Gera timestamp no horário de Brasília
+        const timestamp = new Date().toLocaleString('sv', { timeZone: 'America/Sao_Paulo' });
+
         // 1. Verifica se já existe registro com o mesmo email
         const { data: existing, error: selectError } = await supabase
             .from('questionario_resultados_empregador')
@@ -23,16 +25,16 @@ exports.handler = async (event) => {
             .maybeSingle();
 
         if (selectError) {
-            console.error('Erro ao verificar registro existente:', selectError);
+            console.error("Erro ao verificar registro existente:", selectError);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ message: 'Erro ao verificar registro existente.' }),
+                body: JSON.stringify({ error: 'Erro ao verificar registro existente.' })
             };
         }
 
         let error;
         if (existing) {
-            // 2. Se já existe → faz update (atualizando também a data/hora)
+            // 2. Se já existe → update (inclui atualização de timestamp)
             ({ error } = await supabase
                 .from('questionario_resultados_empregador')
                 .update({
@@ -41,12 +43,12 @@ exports.handler = async (event) => {
                     description: data.description,
                     inovadorScore: data.inovadorScore,
                     executorScore: data.executorScore,
-                    timestamp: new Date().toISOString() // força atualizar a data/hora
+                    timestamp: timestamp
                 })
                 .eq('email', data.email)
             );
         } else {
-            // 3. Se não existe → faz insert
+            // 3. Se não existe → insert (inclui timestamp)
             ({ error } = await supabase
                 .from('questionario_resultados_empregador')
                 .insert([{
@@ -56,29 +58,29 @@ exports.handler = async (event) => {
                     description: data.description,
                     inovadorScore: data.inovadorScore,
                     executorScore: data.executorScore,
-                    timestamp: new Date().toISOString() // salva data/hora na criação
+                    timestamp: timestamp
                 }])
             );
         }
 
         if (error) {
-            console.error('Erro ao salvar o perfil do empregador:', error);
+            console.error("Erro ao salvar no Supabase:", error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ message: 'Erro ao salvar o perfil.' }),
+                body: JSON.stringify({ error: error.message, details: error.details })
             };
         }
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Perfil do empregador salvo/atualizado com sucesso!' }),
+            body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
         };
 
     } catch (e) {
-        console.error('Erro ao processar a requisição:', e);
+        console.error("Erro na função:", e);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Erro interno do servidor.' }),
+            body: JSON.stringify({ error: 'Erro interno do servidor.' })
         };
     }
 };
