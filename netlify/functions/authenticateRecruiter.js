@@ -1,39 +1,45 @@
-// netlify/functions/authenticateRecruiter.js
+const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcrypt');
 
-exports.handler = async (event, context) => {
-    // Verifique se a requisição é do tipo POST
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            body: 'Método não permitido.'
-        };
+        return { statusCode: 405, body: 'Método não permitido.' };
     }
 
     try {
-        const data = JSON.parse(event.body);
-        const { username, password } = data;
+        const { username, password } = JSON.parse(event.body);
 
-        // **ATENÇÃO: Este é o local seguro para verificar as credenciais.**
-        // No mundo real, você usaria variáveis de ambiente do Netlify ou um banco de dados
-        // para armazenar credenciais e nunca as deixaria hardcoded.
-        const correctUsername = 'rh@conectarh.com';
-        const correctPassword = 'conectarh123';
+        // Busca o recrutador pelo username
+        const { data: recruiter, error } = await supabase
+            .from('recruiters')
+            .select('*')
+            .eq('username', username)
+            .maybeSingle();
 
-        if (username === correctUsername && password === correctPassword) {
-            return {
-                statusCode: 200,
-                body: JSON.stringify({ message: 'Autenticação bem-sucedida.' })
-            };
-        } else {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({ message: 'Credenciais inválidas.' })
-            };
+        if (error) throw error;
+
+        if (!recruiter) {
+            return { statusCode: 401, body: JSON.stringify({ message: 'Credenciais inválidas.' }) };
         }
-    } catch (error) {
+
+        // Compara a senha enviada com o hash armazenado
+        const passwordMatch = await bcrypt.compare(password, recruiter.password);
+        if (!passwordMatch) {
+            return { statusCode: 401, body: JSON.stringify({ message: 'Credenciais inválidas.' }) };
+        }
+
         return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Erro interno do servidor.' })
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Autenticação bem-sucedida.', recruiter: { id: recruiter.id, username: recruiter.username } })
         };
+
+    } catch (error) {
+        console.error("Erro na autenticação do recrutador:", error);
+        return { statusCode: 500, body: JSON.stringify({ message: 'Erro interno do servidor.' }) };
     }
 };
