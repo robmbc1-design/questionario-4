@@ -1,6 +1,13 @@
 // Credenciais e perfil
 let isRecruiterProfile = false;
-let lastScreen = 'roleSelectionScreen'; // guarda a última tela visitada
+
+// Limpa campos de login do recrutador
+window.clearRecruiterCredentials = function() {
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    if (usernameInput) usernameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+}
 
 // Função para alternar a visibilidade das telas
 window.showScreen = function(screenId) {
@@ -11,13 +18,16 @@ window.showScreen = function(screenId) {
     });
     const targetElement = document.getElementById(screenId);
     if (targetElement) targetElement.classList.remove('hidden');
-    lastScreen = screenId; // atualiza a última tela
 }
 
 // Funções de navegação
 window.showRoleSelection = function() {
     isRecruiterProfile = false;
     showScreen('roleSelectionScreen');
+
+    // Limpa credenciais
+    window.clearRecruiterCredentials();
+
     const loginForm = document.getElementById('recruiterLoginForm');
     if (loginForm) loginForm.reset();
     const loginMessage = document.getElementById('loginMessage');
@@ -29,6 +39,7 @@ window.showCandidateWelcome = function() {
     showScreen('candidateWelcomeScreen');
 }
 
+// Função para o botão Empregador
 window.showEmployerWelcome = function() {
     window.location.href = 'employer.html';
 }
@@ -44,6 +55,13 @@ window.showRecruiterDashboard = function() {
     window.viewAllResults();
 }
 
+// Função de logout do recrutador
+window.logoutRecruiter = function() {
+    isRecruiterProfile = false;
+    showScreen('roleSelectionScreen');
+    window.clearRecruiterCredentials();
+}
+
 window.startQuestionnaire = function(isRecruiter = false) {
     showScreen('questionnaire');
     shuffleQuestions('employeeForm');
@@ -53,28 +71,19 @@ window.startQuestionnaire = function(isRecruiter = false) {
 
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
-    
     if (isRecruiter) {
         backForRecruiter.classList.remove('hidden');
         backForCandidate.classList.add('hidden');
-        backForRecruiter.onclick = () => {
-            // Corrige o botão voltar: volta para a tela anterior ao questionário
-            if (lastScreen === 'questionnaire') {
-                showRecruiterDashboard();
-            } else {
-                showScreen(lastScreen);
-            }
-        };
+
+        // Corrige botão voltar para retornar ao dashboard do recrutador
+        backForRecruiter.onclick = () => showRecruiterDashboard();
     } else {
         backForRecruiter.classList.add('hidden');
         backForCandidate.classList.remove('hidden');
-        backForCandidate.onclick = () => {
-            showRoleSelection();
-        };
     }
 }
 
-// Login do recrutador
+// Login do recrutador (autenticação no servidor)
 window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
@@ -92,7 +101,7 @@ window.loginRecruiter = async function() {
         });
 
         if (response.ok) {
-            showScreen('recruiterDashboard');
+            showRecruiterDashboard();
         } else {
             loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
             loginMessage.classList.remove('hidden');
@@ -104,11 +113,11 @@ window.loginRecruiter = async function() {
     }
 }
 
-// Exibe todos os resultados (candidatos + empregadores)
+// Exibe todos os resultados (colaborador + empregador)
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsContainer = document.getElementById('resultsView');
-    resultsContainer.innerHTML = ''; // Limpa o conteúdo
+    resultsContainer.innerHTML = ''; 
 
     try {
         const response = await fetch('/.netlify/functions/getDashboardResults');
@@ -118,10 +127,11 @@ window.viewAllResults = async function() {
         const candidateResults = allResults.candidateResults || [];
         const employerResults = allResults.employerResults || [];
 
-        const backButtonHtml = `<button onclick="window.backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
+        // Botão de voltar
+        const backButtonHtml = `<button onclick="showRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
         resultsContainer.innerHTML += backButtonHtml;
 
-        // Resultados dos colaboradores
+        // Resultados do Colaborador
         resultsContainer.innerHTML += `
             <div class="mt-8">
                 <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
@@ -129,6 +139,7 @@ window.viewAllResults = async function() {
             </div>
         `;
         const candidateResultsList = document.getElementById('candidateResultsList');
+
         if (candidateResults.length === 0) {
             candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
         } else {
@@ -149,7 +160,7 @@ window.viewAllResults = async function() {
             });
         }
 
-        // Resultados dos empregadores
+        // Resultados do Empregador
         resultsContainer.innerHTML += `
             <div class="mt-8">
                 <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
@@ -157,6 +168,7 @@ window.viewAllResults = async function() {
             </div>
         `;
         const employerResultsList = document.getElementById('employerResultsList');
+
         if (employerResults.length === 0) {
             employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
         } else {
@@ -183,9 +195,9 @@ window.viewAllResults = async function() {
     }
 }
 
-// Botão de voltar ao dashboard
+// Função para o botão de voltar ao dashboard
 window.backToRecruiterDashboard = function() {
-    showScreen('recruiterDashboard');
+    showRecruiterDashboard();
 }
 
 // Funções globais
@@ -213,7 +225,7 @@ window.shuffleQuestions = function(formId) {
     });
 }
 
-// Submissão do questionário
+// Submissão do questionário do colaborador
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
@@ -232,7 +244,7 @@ window.submitResults = async function() {
     const statusMessage = document.getElementById('statusMessage');
 
     let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
-    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     const questionCategories = {
         'q1': { inovador: true, especialista: true },
         'q2': { inovador: true },
@@ -292,12 +304,12 @@ window.submitResults = async function() {
         statusMessage.classList.add('bg-green-100', 'text-green-800');
 
         let successContent = isRecruiterProfile
-            ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-               <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
-            : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-               <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-               <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+                ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                  <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+                : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                  <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
 
         statusMessage.innerHTML = successContent;
         form.classList.add('hidden');
@@ -310,7 +322,6 @@ window.submitResults = async function() {
     }
 }
 
-// Reset do questionário
 window.resetQuestionnaire = function() {
     const form = document.getElementById('employeeForm');
     form.reset();
@@ -321,6 +332,6 @@ window.resetQuestionnaire = function() {
     submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
     submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
 
-    if (isRecruiterProfile) showScreen('recruiterDashboard');
+    if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
