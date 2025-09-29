@@ -17,7 +17,7 @@ exports.handler = async (event) => {
         // Altere upsert para insert para evitar erros com a chave de conflito
         const { error } = await supabase
             .from('questionario_resultados')
-            .insert([{
+            .upsert([{
                 name: data.name,
                 email: data.email,
                 profile: data.profile,
@@ -49,3 +49,4 @@ exports.handler = async (event) => {
         };
     }
 };
+
