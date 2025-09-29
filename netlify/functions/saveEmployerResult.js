@@ -18,7 +18,7 @@ exports.handler = async (event) => {
         // 1. Verifica se já existe registro com o mesmo email
         const { data: existing, error: selectError } = await supabase
             .from('questionario_resultados_empregador')
-            .select('id')   // supondo que exista uma PK "id"
+            .select('id')
             .eq('email', data.email)
             .maybeSingle();
 
@@ -32,7 +32,7 @@ exports.handler = async (event) => {
 
         let error;
         if (existing) {
-            // 2. Se já existe → faz update
+            // 2. Se já existe → faz update (atualizando também a data/hora)
             ({ error } = await supabase
                 .from('questionario_resultados_empregador')
                 .update({
@@ -40,7 +40,8 @@ exports.handler = async (event) => {
                     profile: data.profile,
                     description: data.description,
                     inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore
+                    executorScore: data.executorScore,
+                    timestamp: new Date().toISOString() // força atualizar a data/hora
                 })
                 .eq('email', data.email)
             );
@@ -54,7 +55,8 @@ exports.handler = async (event) => {
                     profile: data.profile,
                     description: data.description,
                     inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore
+                    executorScore: data.executorScore,
+                    timestamp: new Date().toISOString() // salva data/hora na criação
                 }])
             );
         }
