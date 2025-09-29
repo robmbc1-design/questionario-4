@@ -35,21 +35,25 @@ window.showEmployerWelcome = function() {
 window.showRecruiterLogin = function() {
     isRecruiterProfile = true;
     showScreen('recruiterLoginScreen');
-    clearRecruiterCredentials();
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
 window.showRecruiterDashboard = function() {
     isRecruiterProfile = true;
     showScreen('recruiterDashboard');
-    window.viewAllResults();
 }
 
+// Função para iniciar o questionário
 window.startQuestionnaire = function(isRecruiter = false) {
     showScreen('questionnaire');
     shuffleQuestions('employeeForm');
-    document.getElementById('employeeForm').reset();
+    const form = document.getElementById('employeeForm');
+    form.reset();
     document.getElementById('statusMessage').classList.add('hidden');
-    document.getElementById('employeeForm').classList.remove('hidden');
+    form.classList.remove('hidden');
 
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
@@ -62,7 +66,7 @@ window.startQuestionnaire = function(isRecruiter = false) {
     }
 }
 
-// Login do recrutador (agora com autenticação no servidor)
+// Login do recrutador
 window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
@@ -73,14 +77,11 @@ window.loginRecruiter = async function() {
         const response = await fetch('/.netlify/functions/authenticateRecruiter', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: usernameInput,
-                password: passwordInput
-            })
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
         });
 
         if (response.ok) {
-            showRecruiterDashboard();
+            showScreen('recruiterDashboard');
         } else {
             loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
             loginMessage.classList.remove('hidden');
@@ -92,19 +93,11 @@ window.loginRecruiter = async function() {
     }
 }
 
-// Limpa credenciais do recrutador
-function clearRecruiterCredentials() {
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    if (usernameInput) usernameInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-}
-
-// Exibe todos os resultados (agora buscando os dois)
+// Exibe todos os resultados
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsContainer = document.getElementById('resultsView');
-    resultsContainer.innerHTML = ''; // Limpa o conteúdo
+    resultsContainer.innerHTML = '';
 
     try {
         const response = await fetch('/.netlify/functions/getDashboardResults');
@@ -117,58 +110,61 @@ window.viewAllResults = async function() {
         const backButtonHtml = `<button onclick="backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
         resultsContainer.innerHTML += backButtonHtml;
 
-        // Resultados dos Colaboradores
-        resultsContainer.innerHTML += `<div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
-            <div id="candidateResultsList" class="space-y-4"></div>
-        </div>`;
+        // Resultados dos candidatos
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
+                <div id="candidateResultsList" class="space-y-4"></div>
+            </div>
+        `;
         const candidateResultsList = document.getElementById('candidateResultsList');
 
         if (candidateResults.length === 0) {
             candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
         } else {
-            candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            candidateResults.sort((a,b)=> new Date(b.timestamp)-new Date(a.timestamp));
             candidateResults.forEach(data => {
                 const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                card.innerHTML = `
                     <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
-                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                    <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
-                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                    <p><strong>Nome:</strong> ${data.name}</p>
+                    <p><strong>E-mail:</strong> ${data.email}</p>
+                    <p><strong>Perfil:</strong> ${data.profile}</p>
+                    <p><strong>Pontuação Total:</strong> ${data.totalScore}</p>
+                    <p><strong>Descrição:</strong> ${data.description}</p>
                 `;
-                candidateResultsList.appendChild(resultCard);
+                candidateResultsList.appendChild(card);
             });
         }
 
-        // Resultados dos Empregadores
-        resultsContainer.innerHTML += `<div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
-            <div id="employerResultsList" class="space-y-4"></div>
-        </div>`;
+        // Resultados dos empregadores
+        resultsContainer.innerHTML += `
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
+                <div id="employerResultsList" class="space-y-4"></div>
+            </div>
+        `;
         const employerResultsList = document.getElementById('employerResultsList');
 
         if (employerResults.length === 0) {
             employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
         } else {
-            employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            employerResults.sort((a,b)=> new Date(b.timestamp)-new Date(a.timestamp));
             employerResults.forEach(data => {
                 const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-                resultCard.innerHTML = `
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                card.innerHTML = `
                     <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
-                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-                    ${isRecruiterProfile ? `<p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
-                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>` : ''}
-                    <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
-                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                    <p><strong>Nome:</strong> ${data.name}</p>
+                    <p><strong>E-mail:</strong> ${data.email}</p>
+                    <p><strong>Perfil:</strong> ${data.profile}</p>
+                    <p><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
+                    <p><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
                 `;
-                employerResultsList.appendChild(resultCard);
+                employerResultsList.appendChild(card);
             });
         }
 
@@ -178,38 +174,32 @@ window.viewAllResults = async function() {
     }
 }
 
-// Função para o botão de voltar ao dashboard
+// Botão voltar do dashboard do recrutador
 window.backToRecruiterDashboard = function() {
     showScreen('recruiterDashboard');
-    clearRecruiterCredentials();
 }
 
 // Funções globais
-window.showModal = function(message) {
-    alert(message);
-}
+window.showModal = function(message) { alert(message); }
 
 window.shuffleQuestions = function(formId) {
     const form = document.getElementById(formId);
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
-
     for (let i = questionCards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [questionCards[i], questionCards[j]] = [questionCards[j], questionCards[i]];
     }
-
     questionCards.forEach(card => form.appendChild(card));
-
     questionCards.forEach((card, index) => {
-        const pElement = card.querySelector('p');
-        if (pElement) {
-            const originalText = pElement.innerText.replace(/^\d+\.\s*/, '');
-            pElement.innerText = `${index + 1}. ${originalText}`;
+        const p = card.querySelector('p');
+        if (p) {
+            const text = p.innerText.replace(/^\d+\.\s*/, '');
+            p.innerText = `${index + 1}. ${text}`;
         }
     });
 }
 
-// Submissão do questionário do colaborador
+// Submissão do questionário
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
@@ -230,26 +220,26 @@ window.submitResults = async function() {
     let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
     const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
     const questionCategories = {
-        'q1': { inovador: true, especialista: true },
-        'q2': { inovador: true },
-        'q3': { inovador: true },
-        'q4': { executor: true },
-        'q5': { executor: true },
-        'q6': { inovador: true },
-        'q7': { executor: true },
-        'q8': { inovador: true },
-        'q9': { inovador: true, especialista: true },
-        'q10': { inovador: true }
+        'q1': { inovador:true, especialista:true },
+        'q2': { inovador:true },
+        'q3': { inovador:true },
+        'q4': { executor:true },
+        'q5': { executor:true },
+        'q6': { inovador:true },
+        'q7': { executor:true },
+        'q8': { inovador:true },
+        'q9': { inovador:true, especialista:true },
+        'q10': { inovador:true }
     };
 
     for (const q of questionNames) {
         const slider = form.querySelector(`input[name="${q}"]`);
         const value = parseInt(slider.value, 10);
         totalScore += value;
-        const category = questionCategories[q];
-        if (category.inovador) inovadorScore += value;
-        if (category.executor) executorScore += value;
-        if (category.especialista) especialistaScore += (6 - value);
+        const cat = questionCategories[q];
+        if (cat.inovador) inovadorScore += value;
+        if (cat.executor) executorScore += value;
+        if (cat.especialista) especialistaScore += (6 - value);
     }
 
     const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
@@ -268,41 +258,46 @@ window.submitResults = async function() {
 
     try {
         const response = await fetch('/.netlify/functions/saveResult', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
             body: JSON.stringify({
-                name: nameInput,
-                email: emailInput,
-                profile: profile,
-                description: description,
-                totalScore: totalScore,
-                inovadorScore: inovadorScore,
-                executorScore: executorScore,
-                especialistaScore: especialistaScore
+                name:nameInput,
+                email:emailInput,
+                profile:profile,
+                description:description,
+                totalScore:totalScore,
+                inovadorScore:inovadorScore,
+                executorScore:executorScore,
+                especialistaScore:especialistaScore
             })
         });
 
         if (!response.ok) throw new Error('Erro ao salvar os dados.');
 
         statusMessage.classList.remove('hidden');
-        statusMessage.classList.add('bg-green-100', 'text-green-800');
+        statusMessage.classList.add('bg-green-100','text-green-800');
 
-        let successContent = isRecruiterProfile
-                ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
-                  <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
-                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
-                : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
-                  <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
-                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+        let successContent = '';
+
+        if (isRecruiterProfile) {
+            successContent = `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                              <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                              <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`;
+        } else {
+            successContent = `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                              <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                              <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+        }
 
         statusMessage.innerHTML = successContent;
         form.classList.add('hidden');
+
     } catch (e) {
         console.error("Erro ao salvar o resultado: ", e);
         showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
         submitButton.disabled = false;
-        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        submitButton.classList.remove('bg-gray-400','cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600','hover:bg-blue-700');
     }
 }
 
@@ -313,9 +308,9 @@ window.resetQuestionnaire = function() {
     document.getElementById('statusMessage').classList.add('hidden');
     const submitButton = document.getElementById('submitButton');
     submitButton.disabled = false;
-    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    submitButton.classList.remove('bg-gray-400','cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600','hover:bg-blue-700');
 
-    if (isRecruiterProfile) showRecruiterDashboard();
+    if (isRecruiterProfile) showScreen('recruiterDashboard');
     else showRoleSelection();
 }
