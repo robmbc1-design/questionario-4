@@ -12,23 +12,14 @@ window.showScreen = function(screenId) {
     if (targetElement) targetElement.classList.remove('hidden');
 }
 
-// Função para limpar campos de login do recrutador
-window.clearRecruiterCredentials = function() {
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    if (usernameInput) usernameInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-    const loginMessage = document.getElementById('loginMessage');
-    if (loginMessage) loginMessage.classList.add('hidden');
-}
-
 // Funções de navegação
 window.showRoleSelection = function() {
     isRecruiterProfile = false;
     showScreen('roleSelectionScreen');
-    window.clearRecruiterCredentials();
     const loginForm = document.getElementById('recruiterLoginForm');
     if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
 window.showCandidateWelcome = function() {
@@ -44,7 +35,6 @@ window.showEmployerWelcome = function() {
 window.showRecruiterLogin = function() {
     isRecruiterProfile = true;
     showScreen('recruiterLoginScreen');
-    window.clearRecruiterCredentials();
 }
 
 window.showRecruiterDashboard = function() {
@@ -62,16 +52,23 @@ window.startQuestionnaire = function(isRecruiter = false) {
 
     const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
     const backForRecruiter = document.getElementById('backFromQuestionnaire');
+    
     if (isRecruiter) {
         backForRecruiter.classList.remove('hidden');
         backForCandidate.classList.add('hidden');
+        backForRecruiter.onclick = () => {
+            showRecruiterDashboard();
+        };
     } else {
         backForRecruiter.classList.add('hidden');
         backForCandidate.classList.remove('hidden');
+        backForCandidate.onclick = () => {
+            showRoleSelection();
+        };
     }
 }
 
-// Login do recrutador (com autenticação)
+// Login do recrutador
 window.loginRecruiter = async function() {
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
@@ -82,7 +79,10 @@ window.loginRecruiter = async function() {
         const response = await fetch('/.netlify/functions/authenticateRecruiter', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
         });
 
         if (response.ok) {
@@ -115,7 +115,6 @@ window.viewAllResults = async function() {
         const backButtonHtml = `<button onclick="window.backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
         resultsContainer.innerHTML += backButtonHtml;
 
-        // Resultados dos colaboradores
         resultsContainer.innerHTML += `
             <div class="mt-8">
                 <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
@@ -144,7 +143,6 @@ window.viewAllResults = async function() {
             });
         }
 
-        // Resultados dos empregadores
         resultsContainer.innerHTML += `
             <div class="mt-8">
                 <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
@@ -179,10 +177,9 @@ window.viewAllResults = async function() {
     }
 }
 
-// Botão voltar para dashboard
+// Função para voltar ao dashboard do recrutador
 window.backToRecruiterDashboard = function() {
-    showScreen('recruiterDashboard');
-    window.clearRecruiterCredentials();
+    showRecruiterDashboard();
 }
 
 // Funções globais
@@ -193,11 +190,14 @@ window.showModal = function(message) {
 window.shuffleQuestions = function(formId) {
     const form = document.getElementById(formId);
     const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
+
     for (let i = questionCards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [questionCards[i], questionCards[j]] = [questionCards[j], questionCards[i]];
     }
+
     questionCards.forEach(card => form.appendChild(card));
+
     questionCards.forEach((card, index) => {
         const pElement = card.querySelector('p');
         if (pElement) {
@@ -207,7 +207,7 @@ window.shuffleQuestions = function(formId) {
     });
 }
 
-// Submissão do questionário
+// Submissão do questionário do colaborador
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
@@ -226,7 +226,7 @@ window.submitResults = async function() {
     const statusMessage = document.getElementById('statusMessage');
 
     let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
-    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+    const questionNames = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10'];
     const questionCategories = {
         'q1': { inovador: true, especialista: true },
         'q2': { inovador: true },
@@ -304,7 +304,6 @@ window.submitResults = async function() {
     }
 }
 
-// Reset do questionário
 window.resetQuestionnaire = function() {
     const form = document.getElementById('employeeForm');
     form.reset();
