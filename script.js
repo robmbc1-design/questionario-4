@@ -12,29 +12,14 @@ window.showScreen = function(screenId) {
     if (targetElement) targetElement.classList.remove('hidden');
 }
 
-// *** CÓDIGO NOVO: FUNÇÃO PARA DESLOGAR O RECRUTADOR E LIMPAR A SESSÃO SUPABASE ***
-window.logoutRecruiter = function() {
-    isRecruiterProfile = false;
-    
-    // Usa a função de logout do Supabase para limpar a sessão
-    // Certifique-se de que a variável 'supabase' está inicializada e acessível
-    if (typeof supabase !== 'undefined') {
-        supabase.auth.signOut();
-    }
-    
-    // Limpa o formulário de login
-    const loginForm = document.getElementById('recruiterLoginForm');
-    if (loginForm) loginForm.reset();
-    
-    const loginMessage = document.getElementById('loginMessage');
-    if (loginMessage) loginMessage.classList.add('hidden');
-}
-
 // Funções de navegação
 window.showRoleSelection = function() {
-    // *** CÓDIGO ALTERADO: AGORA CHAMA A FUNÇÃO DE LOGOUT ***
-    logoutRecruiter(); 
+    isRecruiterProfile = false;
     showScreen('roleSelectionScreen');
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
 }
 
 window.showCandidateWelcome = function() {
@@ -77,34 +62,32 @@ window.startQuestionnaire = function(isRecruiter = false) {
     }
 }
 
-// *** CÓDIGO ALTERADO: LOGIN DO RECRUTADOR COM AUTENTICAÇÃO SUPABASE ***
+// Login do recrutador (agora com autenticação no servidor)
 window.loginRecruiter = async function() {
-    const emailInput = document.getElementById('username').value.trim();
+    const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
     const loginMessage = document.getElementById('loginMessage');
     loginMessage.classList.add('hidden');
 
     try {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: emailInput,
-            password: passwordInput,
+        const response = await fetch('/.netlify/functions/authenticateRecruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
         });
 
-        if (error) {
-            console.error("Erro no login:", error);
-            if (error.message.includes('Invalid login credentials')) {
-                loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
-            } else {
-                loginMessage.innerText = 'Erro ao conectar. Tente novamente mais tarde.';
-            }
-            loginMessage.classList.remove('hidden');
-        } else {
-            // Login bem-sucedido
+        if (response.ok) {
             showScreen('recruiterDashboard');
+        } else {
+            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.classList.remove('hidden');
         }
     } catch (e) {
-        console.error("Erro inesperado:", e);
-        loginMessage.innerText = 'Ocorreu um erro. Verifique sua conexão e tente novamente.';
+        console.error("Erro na autenticação:", e);
+        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
         loginMessage.classList.remove('hidden');
     }
 }
@@ -333,5 +316,3 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
-
-
