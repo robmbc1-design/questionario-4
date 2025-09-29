@@ -10,5 +10,5 @@
   # Usa esbuild para empacotar as funções
   node_bundler = "esbuild"
 
-  # Mantém a lib supabase-js externa (não precisa rebundlar dentro da função)
-  external_node_modules = ["@supabase/supabase-js"]
+  # Mantém as libs externas
+  external_node_modules = ["@supabase/supabase-js", "bcryptjs"]
