@@ -14,7 +14,7 @@ exports.handler = async (event) => {
     try {
         const data = JSON.parse(event.body);
 
-        // Altere upsert para insert para evitar erros com a chave de conflito
+        // Upsert: insere ou atualiza se já existir o email
         const { error } = await supabase
             .from('questionario_resultados')
             .upsert([{
@@ -27,7 +27,7 @@ exports.handler = async (event) => {
                 executorScore: data.executorScore,
                 especialistaScore: data.especialistaScore,
                 timestamp: new Date().toISOString()
-            }]);{ onConflict: ['email'] });
+            }], { onConflict: ['email'] }); // CORRETO
 
         if (error) {
             console.error("Erro no Supabase:", error);
@@ -39,7 +39,7 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Dados salvos com sucesso!' })
+            body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
         };
     } catch (e) {
         console.error("Erro na função:", e);
@@ -49,5 +49,3 @@ exports.handler = async (event) => {
         };
     }
 };
-
-
