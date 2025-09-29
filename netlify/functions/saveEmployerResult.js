@@ -16,31 +16,37 @@ exports.handler = async (event) => {
     try {
         const data = JSON.parse(event.body);
 
-        // Insere os dados na tabela do Supabase
+        // *** CÓDIGO CORRIGIDO: TROCA DE .insert() PARA .upsert() ***
+        // .upsert() tenta inserir, mas se encontrar um email duplicado, atualiza o registro.
         const { error } = await supabase
-            .from('questionario_resultados_empregador') // Verifique se o nome da sua tabela está correto
-            .insert([
+            .from('questionario_resultados_empregador') // Nome da sua tabela
+            .upsert([
                 {
                     name: data.name,
                     email: data.email,
                     profile: data.profile,
                     description: data.description,
                     inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore
+                    executorScore: data.executorScore,
+                    // Inclua o 'timestamp' se sua coluna não for preenchida automaticamente
+                    // timestamp: new Date().toISOString() 
                 }
-            ]);
+            ], { 
+                onConflict: 'email' // Esta linha diz ao Supabase para verificar a coluna 'email'
+            });
 
         if (error) {
             console.error('Erro ao salvar o perfil do empregador:', error);
+            // Retorna um status de erro mais claro em caso de falha no DB
             return {
                 statusCode: 500,
-                body: JSON.stringify({ message: 'Erro ao salvar o perfil.' }),
+                body: JSON.stringify({ message: 'Erro ao salvar o perfil no banco de dados.' }),
             };
         }
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Perfil do empregador salvo com sucesso!' }),
+            body: JSON.stringify({ message: 'Perfil do empregador salvo/atualizado com sucesso!' }),
         };
 
     } catch (e) {
