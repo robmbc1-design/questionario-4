@@ -27,7 +27,7 @@ exports.handler = async (event) => {
                 executorScore: data.executorScore,
                 especialistaScore: data.especialistaScore,
                 timestamp: new Date().toISOString()
-            }]);
+            }]);{ onConflict: ['email'] });
 
         if (error) {
             console.error("Erro no Supabase:", error);
@@ -49,4 +49,5 @@ exports.handler = async (event) => {
         };
     }
 };
+
 
