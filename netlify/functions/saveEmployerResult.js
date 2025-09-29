@@ -19,7 +19,7 @@ exports.handler = async (event) => {
         // Insere os dados na tabela do Supabase
         const { error } = await supabase
             .from('questionario_resultados_empregador') // Verifique se o nome da sua tabela está correto
-            .insert([
+            .upsert([
                 {
                     name: data.name,
                     email: data.email,
