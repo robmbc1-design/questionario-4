@@ -1,609 +1,321 @@
-// script.js - Versão completa e CORRIGIDA para leitura dos campos do empregador
-// Observação: endpoints esperados (Netlify): 
-// /.netlify/functions/authenticateRecruiter
-// /.netlify/functions/getDashboardResults
-// /.netlify/functions/saveResult
-// /.netlify/functions/saveEmployerResult
-// /.netlify/functions/updateRecruiterProfile
-
-// Controle de perfil
+// Credenciais e perfil
 let isRecruiterProfile = false;
-
-// Lista de telas gerenciada por showScreen()
-function getScreensList() {
-  return [
-    'roleSelectionScreen',
-    'candidateWelcomeScreen',
-    'recruiterLoginScreen',
-    'recruiterDashboard',
-    'questionnaire',
-    'resultsView',
-    'employerQuestionnaire',
-    'recruiterProfile'
-  ];
-}
 
 // Função para alternar a visibilidade das telas
 window.showScreen = function(screenId) {
-  const screens = getScreensList();
-  screens.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('hidden');
-  });
-  const target = document.getElementById(screenId);
-  if (target) target.classList.remove('hidden');
-};
+    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire'];
+    screens.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.add('hidden');
+    });
+    const targetElement = document.getElementById(screenId);
+    if (targetElement) targetElement.classList.remove('hidden');
+}
 
 // Funções de navegação
 window.showRoleSelection = function() {
-  isRecruiterProfile = false;
-  showScreen('roleSelectionScreen');
-  const loginForm = document.getElementById('recruiterLoginForm');
-  if (loginForm) loginForm.reset();
-  const loginMessage = document.getElementById('loginMessage');
-  if (loginMessage) loginMessage.classList.add('hidden');
-};
+    isRecruiterProfile = false;
+    showScreen('roleSelectionScreen');
+    const loginForm = document.getElementById('recruiterLoginForm');
+    if (loginForm) loginForm.reset();
+    const loginMessage = document.getElementById('loginMessage');
+    if (loginMessage) loginMessage.classList.add('hidden');
+}
 
 window.showCandidateWelcome = function() {
-  isRecruiterProfile = false;
-  showScreen('candidateWelcomeScreen');
-};
+    isRecruiterProfile = false;
+    showScreen('candidateWelcomeScreen');
+}
 
+// Função para o botão Empregador
 window.showEmployerWelcome = function() {
-  // Mostra a tela do empregador
-  isRecruiterProfile = false;
-  showScreen('employerQuestionnaire');
-};
+    window.location.href = 'employer.html';
+}
 
 window.showRecruiterLogin = function() {
-  isRecruiterProfile = true;
-  showScreen('recruiterLoginScreen');
-  clearRecruiterCredentials();
-};
+    isRecruiterProfile = true;
+    showScreen('recruiterLoginScreen');
+    clearRecruiterCredentials();
+}
 
-// Exibe o painel do recrutador
 window.showRecruiterDashboard = function() {
-  isRecruiterProfile = true;
-  showScreen('recruiterDashboard');
-  // opcional: carregar dados iniciais
-};
-
-// Exibe a tela do perfil do recrutador
-window.showRecruiterProfile = function() {
-  const logged = JSON.parse(localStorage.getItem('loggedRecruiter'));
-  if (!logged?.email) {
-    // se não estiver logado, redireciona ao login
-    showModal('Você precisa estar logado como recrutador para acessar o perfil.');
-    showRecruiterLogin();
-    return;
-  }
-
-  isRecruiterProfile = true;
-  showScreen('recruiterProfile');
-
-  // Preenche formulário a partir do localStorage (ou busca do servidor, se preferir)
-  document.getElementById('recruiterName').value = logged.name || '';
-  const emailField = document.getElementById('recruiterEmail');
-  if (emailField) emailField.value = logged.email || '';
-  // limpa campo de senha
-  const pw = document.getElementById('recruiterPassword');
-  if (pw) pw.value = '';
-};
-
-// Voltar ao dashboard do recrutador
-window.backToRecruiterDashboard = function() {
-  showRecruiterDashboard();
-  clearRecruiterCredentials();
-};
-
-// Limpa credenciais do recrutador (campos de login)
-function clearRecruiterCredentials() {
-  const usernameInput = document.getElementById('username');
-  const passwordInput = document.getElementById('password');
-  if (usernameInput) usernameInput.value = '';
-  if (passwordInput) passwordInput.value = '';
+    isRecruiterProfile = true;
+    showScreen('recruiterDashboard');
+    window.viewAllResults();
 }
 
-// Função auxiliar: mostra modal simples (usa infoModal)
-window.showModal = function(message) {
-  const modal = document.getElementById('infoModal');
-  const modalMessage = document.getElementById('modalMessage');
-  if (modal && modalMessage) {
-    modalMessage.innerText = message;
-    modal.classList.remove('hidden');
-  } else {
-    alert(message);
-  }
-};
+window.startQuestionnaire = function(isRecruiter = false) {
+    showScreen('questionnaire');
+    shuffleQuestions('employeeForm');
+    document.getElementById('employeeForm').reset();
+    document.getElementById('statusMessage').classList.add('hidden');
+    document.getElementById('employeeForm').classList.remove('hidden');
 
-window.closeModal = function() {
-  const modal = document.getElementById('infoModal');
-  if (modal) modal.classList.add('hidden');
-};
+    const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
+    const backForRecruiter = document.getElementById('backFromQuestionnaire');
+    if (isRecruiter) {
+        backForRecruiter.classList.remove('hidden');
+        backForCandidate.classList.add('hidden');
+    } else {
+        backForRecruiter.classList.add('hidden');
+        backForCandidate.classList.remove('hidden');
+    }
+}
 
-// Embaralha perguntas (mantém o 1º e 2º campos - nome e e-mail - no topo)
-window.shuffleQuestions = function(formId) {
-  const form = document.getElementById(formId);
-  if (!form) return;
-  const questionCards = Array.from(form.querySelectorAll('.question-card'));
-  // se tiver menos de 3, nada a fazer
-  if (questionCards.length <= 2) return;
-
-  // mantém os dois primeiros (nome/email) — se quiser variar, ajuste o seletor
-  const fixed = questionCards.slice(0, 2);
-  const toShuffle = questionCards.slice(2);
-
-  for (let i = toShuffle.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [toShuffle[i], toShuffle[j]] = [toShuffle[j], toShuffle[i]];
-  }
-
-  // esvazia e reanexa
-  questionCards.forEach(c => c.remove());
-  fixed.forEach(c => form.appendChild(c));
-  toShuffle.forEach(c => form.appendChild(c));
-};
-
-// === LOGIN DO RECRUTADOR (serverless) ===
+// Login do recrutador (agora com autenticação no servidor)
 window.loginRecruiter = async function() {
-  const username = (document.getElementById('username')?.value || '').trim();
-  const password = (document.getElementById('password')?.value || '').trim();
-  const loginMessage = document.getElementById('loginMessage');
-  if (loginMessage) loginMessage.classList.add('hidden');
+    const usernameInput = document.getElementById('username').value.trim();
+    const passwordInput = document.getElementById('password').value.trim();
+    const loginMessage = document.getElementById('loginMessage');
+    loginMessage.classList.add('hidden');
 
-  if (!username || !password) {
-    if (loginMessage) {
-      loginMessage.innerText = 'Preencha usuário e senha.';
-      loginMessage.classList.remove('hidden');
-    }
-    return;
-  }
+    try {
+        const response = await fetch('/.netlify/functions/authenticateRecruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
 
-  try {
-    const res = await fetch('/.netlify/functions/authenticateRecruiter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      if (loginMessage) {
-        loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
-        loginMessage.classList.remove('hidden');
-      }
-      console.error('Login falhou:', res.status, txt);
-      return;
-    }
-
-    const data = await res.json();
-    // espera que o endpoint retorne objeto { email, name, ... }
-    const recruiter = {
-      email: data.email || username,
-      name: data.name || data.email || username
-    };
-    localStorage.setItem('loggedRecruiter', JSON.stringify(recruiter));
-    isRecruiterProfile = true;
-    showRecruiterDashboard();
-  } catch (err) {
-    console.error('Erro na autenticação:', err);
-    if (loginMessage) {
-      loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
-      loginMessage.classList.remove('hidden');
-    } else {
-      showModal('Erro ao conectar com o servidor. Tente novamente mais tarde.');
-    }
-  }
-};
-
-// === LOGOUT ===
-window.logoutRecruiter = function() {
-  localStorage.removeItem('loggedRecruiter');
-  isRecruiterProfile = false;
-  showRoleSelection();
-};
-
-// === ATUALIZAÇÃO DE PERFIL (serverless) ===
-window.updateRecruiterProfile = async function() {
-  const name = (document.getElementById('recruiterName')?.value || '').trim();
-  const password = (document.getElementById('recruiterPassword')?.value || '').trim();
-  const status = document.getElementById('profileStatusMessage');
-
-  if (!name) {
-    if (status) { status.classList.remove('hidden'); status.innerText = 'Por favor, informe o nome.'; status.classList.add('text-red-600'); }
-    return;
-  }
-
-  const logged = JSON.parse(localStorage.getItem('loggedRecruiter') || '{}');
-  const email = logged?.email;
-  if (!email) {
-    showModal('E-mail do recrutador não encontrado. Faça login novamente.');
-    showRecruiterLogin();
-    return;
-  }
-
-  try {
-    const res = await fetch('/.netlify/functions/updateRecruiterProfile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, password, email })
-    });
-
-    if (!res.ok) {
-      throw new Error('Falha ao atualizar no servidor.');
-    }
-
-    // atualiza localStorage
-    const updated = { ...logged, name };
-    localStorage.setItem('loggedRecruiter', JSON.stringify(updated));
-
-    if (status) { status.classList.remove('hidden'); status.innerText = 'Perfil atualizado com sucesso!'; status.classList.remove('text-red-600'); status.classList.add('text-green-600'); }
-    // limpa campo senha
-    const pwField = document.getElementById('recruiterPassword');
-    if (pwField) pwField.value = '';
-  } catch (err) {
-    console.error('Erro updateRecruiterProfile:', err);
-    if (status) { status.classList.remove('hidden'); status.innerText = 'Erro ao atualizar o perfil.'; status.classList.remove('text-green-600'); status.classList.add('text-red-600'); }
-  }
-};
-
-// === Envio do questionário do colaborador ===
-window.submitResults = async function() {
-  const name = (document.getElementById('name')?.value || '').trim();
-  const email = (document.getElementById('email')?.value || '').trim();
-
-  if (!name || !email) {
-    showModal('Por favor, preencha nome e e-mail antes de enviar.');
-    return;
-  }
-
-  const submitButton = document.getElementById('submitButton');
-  if (submitButton) { submitButton.disabled = true; submitButton.classList.add('opacity-60', 'cursor-not-allowed'); }
-
-  try {
-    // coleta respostas q1..q10
-    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
-    let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
-    const categories = {
-      'q1': { inovador: true, especialista: true },
-      'q2': { inovador: true },
-      'q3': { inovador: true },
-      'q4': { executor: true },
-      'q5': { executor: true },
-      'q6': { inovador: true },
-      'q7': { executor: true },
-      'q8': { inovador: true },
-      'q9': { inovador: true, especialista: true },
-      'q10': { inovador: true }
-    };
-
-    const form = document.getElementById('employeeForm');
-    for (const q of questionNames) {
-      const slider = form.querySelector(`input[name="${q}"]`);
-      const value = slider ? parseInt(slider.value, 10) : 3;
-      totalScore += value;
-      const cat = categories[q] || {};
-      
-      // Pontuação de Perfil: 
-      // Inovador/Executor/Especialista (baseado na lógica original de 1-5)
-      if (cat.inovador) inovadorScore += value;
-      if (cat.executor) executorScore += value;
-      // A lógica original inverteva a pontuação para especialista em q9 (6 - value)
-      if (cat.especialista) especialistaScore += (q === 'q9' ? (6 - value) : value); 
-    }
-
-    // determina perfil
-    const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
-    let profile = '', description = '';
-    if (maxScore === inovadorScore) {
-      profile = "O Inovador";
-      description = "Profissional proativo e adaptável...";
-    } else if (maxScore === executorScore) {
-      profile = "O Executor Estratégico";
-      description = "Profissional focado na execução e processos...";
-    } else {
-      profile = "O Especialista Fiel";
-      description = "Profissional metódico e confiável...";
-    }
-
-    const payload = {
-      name, email, profile, description, totalScore,
-      inovadorScore, executorScore, especialistaScore,
-      timestamp: new Date().toISOString()
-    };
-
-    const res = await fetch('/.netlify/functions/saveResult', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error('Falha ao salvar resultado.');
-
-    // mostra confirmação
-    const status = document.getElementById('statusMessage');
-    if (status) {
-      status.classList.remove('hidden');
-      status.classList.add('bg-green-100', 'text-green-800', 'p-4', 'rounded-md');
-      status.innerHTML = `<p class="font-bold">Questionário finalizado com sucesso!</p>
-                          <p class="mt-2">Agradecemos sua participação.</p>`;
-    }
-
-    // esconde o form
-    const formEl = document.getElementById('employeeForm');
-    if (formEl) formEl.classList.add('hidden');
-
-  } catch (err) {
-    console.error('Erro submitResults:', err);
-    showModal('Erro ao enviar resultados. Tente novamente mais tarde.');
-    if (submitButton) { submitButton.disabled = false; submitButton.classList.remove('opacity-60', 'cursor-not-allowed'); }
-  }
-};
-
-// === Envio do questionário do empregador (CORRIGIDO) ===
-window.submitEmployerResults = async function() {
-  const name = (document.getElementById('employerName')?.value || '').trim();
-  const email = (document.getElementById('employerEmail')?.value || '').trim();
-
-  if (!name || !email) {
-    showModal('Por favor, preencha nome e e-mail antes de enviar.');
-    return;
-  }
-
-  const submitButton = document.getElementById('submitEmployerButton');
-  if (submitButton) { submitButton.disabled = true; submitButton.classList.add('opacity-60', 'cursor-not-allowed'); }
-
-  try {
-    // Corrigido: lista de nomes dos campos do formulário do empregador
-    const qNames = ['eq1', 'eq2', 'eq3', 'eq4', 'eq5', 'eq6', 'eq7', 'eq8', 'eq9', 'eq10'];
-    let total = 0, inovador = 0, executor = 0, especialista = 0;
-    const form = document.getElementById('employerForm');
-
-    // Mapeamento de categorias e inversão (Ajustado para Selects)
-    const categories = {
-      'eq1': { inovador: true, especialista: true, invert: false }, // Slider - Inovação vs. Experiência (Não inverte o valor do slider)
-      'eq2': { executor: true, especialista: true, invert: true }, // Descrição definida? (Sim=Exec./Espec., Não=Inovador) -> Inverte para dar score a Inovador se for 'Não'
-      'eq3': { executor: true, especialista: true, invert: true }, // Urgência? (Sim=Exec./Espec., Não=Inovador)
-      'eq4': { executor: true, especialista: true, invert: true }, // Presenciais? (Sim=Exec./Espec., Não=Inovador)
-      'eq5': { especialista: true, invert: true }, // Nível de experiência? (Experiente=Especialista, Iniciante=Inovador)
-      'eq6': { especialista: true, invert: true }, // Formação específica? (Sim=Especialista, Não=Inovador)
-      'eq7': { executor: true, especialista: true, invert: true }, // Benefícios? (Sim=Exec./Espec., Não=Inovador)
-      'eq8': { executor: true, invert: true }, // Local? (Sim=Executor, Não=Inovador)
-      'eq9': { executor: true, inovador: true, invert: false }, // Comportamental? (Sim=Alta pontuação para ambos)
-      'eq10': { executor: true, inovador: true, invert: true } // Prazo? (Curto=Executor, Longo=Inovador)
-    };
-
-    for (const q of qNames) {
-      const element = form.querySelector(`[name="${q}"]`);
-      if (!element) continue;
-
-      let value = 3; // Valor padrão/neutro
-      let rawValue = 3; // Valor lido (1-5)
-
-      if (element.tagName === 'INPUT' && element.type === 'range') {
-        // Tratamento para o slider (eq1 no HTML tem name="q1", mas aqui usamos 'eq1' na lista)
-        rawValue = parseInt(element.value, 10);
-        value = rawValue;
-      } else if (element.tagName === 'SELECT') {
-        // Tratamento para os selects (eq2 a eq10)
-        const selectedValue = element.value;
-
-        // Mapeamento Simplificado (1-5)
-        switch (q) {
-          case 'eq2': // Descrição definida? (Sim=5, Não=1)
-            if (selectedValue === 'Sim') rawValue = 5;
-            else if (selectedValue === 'Parcialmente') rawValue = 3;
-            else rawValue = 1;
-            break;
-          case 'eq3': // Urgência? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq4': // Presenciais? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq5': // Experiência? (Experiente=5, Iniciante=1)
-            if (selectedValue === 'Experiente') rawValue = 5;
-            else if (selectedValue === 'Intermediário') rawValue = 3;
-            else rawValue = 1;
-            break;
-          case 'eq6': // Formação específica? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq7': // Benefícios? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq8': // Local? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq9': // Comportamental? (Sim=5, Não=1)
-            rawValue = selectedValue === 'Sim' ? 5 : 1;
-            break;
-          case 'eq10': // Prazo? (1 semana=5, Mais de 1 mês=1)
-            if (selectedValue === '1 semana') rawValue = 5;
-            else if (selectedValue === '2 semanas' || selectedValue === '1 mês') rawValue = 3;
-            else rawValue = 1;
-            break;
-        }
-        value = rawValue;
-      }
-
-      // Aplica a pontuação
-      total += value;
-      const cat = categories[q] || {};
-      
-      // Lógica de inversão: Se a categoria for marcada como invertida (ex: Sim=5 para Executor, significa que Sim=1 para Inovador)
-      const scoreForInovador = cat.inovador && cat.invert ? (6 - value) : value;
-
-      // Pontuações:
-      if (cat.inovador) inovador += scoreForInovador;
-      // Executor/Especialista pontuam com o valor direto (5=Sim, 1=Não)
-      if (cat.executor && !cat.invert) executor += value;
-      if (cat.especialista && !cat.invert) especialista += value;
-      
-      // Ajuste para o q10 que é pontuado em ambos
-      if (q === 'eq10') {
-        if (value > 3) executor += value; // Curto prazo (5) = Executor
-        else inovador += (6 - value); // Longo prazo (1) = Inovador
-      }
-    }
-
-    const payload = {
-      name, email,
-      totalScore: total,
-      inovadorScore: inovador,
-      executorScore: executor,
-      especialistaScore: especialista,
-      timestamp: new Date().toISOString()
-    };
-
-    const res = await fetch('/.netlify/functions/saveEmployerResult', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error('Falha ao salvar resultado do empregador.');
-
-    const status = document.getElementById('statusEmployerMessage');
-    if (status) {
-      status.classList.remove('hidden');
-      status.classList.add('bg-green-100', 'text-green-800', 'p-4', 'rounded-md');
-      status.innerHTML = `<p class="font-bold">Questionário finalizado com sucesso!</p>
-                          <p class="mt-2">Obrigado — os resultados foram gravados.</p>`;
-    }
-    
-    // Esconde o formulário para evitar múltiplos envios
-    const formEl = document.getElementById('employerForm');
-    if (formEl) formEl.classList.add('hidden');
-
-  } catch (err) {
-    console.error('Erro submitEmployerResults:', err);
-    showModal('Erro ao enviar os resultados do empregador. Tente novamente.');
-    if (submitButton) { submitButton.disabled = false; submitButton.classList.remove('opacity-60', 'cursor-not-allowed'); }
-  }
-};
-
-// === Visualizar todos os resultados (painel do recrutador) ===
-window.viewAllResults = async function() {
-  showScreen('resultsView');
-  const resultsContainer = document.getElementById('resultsView');
-  if (!resultsContainer) return;
-  // limpa conteúdo e mostra cabeçalho
-  resultsContainer.innerHTML = `<div class="container">
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Resultados das Avaliações</h1>
-    <div id="resultsContent" class="space-y-6"></div>
-    <div class="text-center mt-6"><button onclick="showRecruiterDashboard()" class="text-gray-500 hover:text-gray-700">&larr; Voltar ao Dashboard</button></div>
-  </div>`;
-
-  try {
-    const res = await fetch('/.netlify/functions/getDashboardResults');
-    if (!res.ok) throw new Error('Erro ao buscar os dados do servidor.');
-    const all = await res.json();
-    const candidateResults = all.candidateResults || [];
-    const employerResults = all.employerResults || [];
-
-    const content = document.getElementById('resultsContent');
-
-    // Colaboradores
-    const cSection = document.createElement('section');
-    cSection.innerHTML = `<h2 class="text-2xl font-bold">Resultados dos Colaboradores</h2>`;
-    if (candidateResults.length === 0) {
-      cSection.innerHTML += `<p class="text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
-    } else {
-      candidateResults.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-      candidateResults.forEach(data => {
-        const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' });
-        const card = document.createElement('div');
-        card.className = 'bg-white p-6 rounded-md shadow-sm';
-        card.innerHTML = `<h3 class="font-bold">${data.profile} — ${date}</h3>
-          <p><strong>Nome:</strong> ${escapeHtml(data.name || '')}</p>
-          <p><strong>E-mail:</strong> ${escapeHtml(data.email || '')}</p>
-          <p><strong>Pontuação total:</strong> ${data.totalScore ?? '-'}</p>
-          <p><strong>Descrição:</strong> ${escapeHtml(data.description || '')}</p>`;
-        cSection.appendChild(card);
-      });
-    }
-    content.appendChild(cSection);
-
-    // Empregadores
-    const eSection = document.createElement('section');
-    eSection.className = 'mt-8';
-    eSection.innerHTML = `<h2 class="text-2xl font-bold">Resultados dos Empregadores</h2>`;
-    if (employerResults.length === 0) {
-      eSection.innerHTML += `<p class="text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
-    } else {
-      employerResults.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-      employerResults.forEach(data => {
-        const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' });
-        const card = document.createElement('div');
-        card.className = 'bg-white p-6 rounded-md shadow-sm';
-        // se recrutador logado, exibe descrição/perfil (maior visibilidade)
-        const logged = JSON.parse(localStorage.getItem('loggedRecruiter') || '{}');
-        const isRecruiter = !!logged?.email;
-        card.innerHTML = `<h3 class="font-bold">Avaliação — ${date}</h3>
-          <p><strong>Nome:</strong> ${escapeHtml(data.name || '')}</p>
-          <p><strong>E-mail:</strong> ${escapeHtml(data.email || '')}</p>
-          ${isRecruiter ? `<p><strong>Pontuação total:</strong> ${data.totalScore ?? '-'}</p>` : ''}
-          <p><strong>Pontuação Inovador:</strong> ${data.inovadorScore ?? '-'}</p>
-          <p><strong>Pontuação Executor:</strong> ${data.executorScore ?? '-'}</p>`;
-        eSection.appendChild(card);
-      });
-    }
-    content.appendChild(eSection);
-
-  } catch (err) {
-    console.error('Erro viewAllResults:', err);
-    resultsContainer.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
-  }
-};
-
-// util: escape simples para evitar injeção ao inserir HTML
-function escapeHtml (unsafe) {
-  if (!unsafe) return '';
-  return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+        if (response.ok) {
+            showRecruiterDashboard();
+        } else {
+            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error("Erro na autenticação:", e);
+        loginMessage.innerText = 'Erro ao conectar com o servidor. Tente novamente mais tarde.';
+        loginMessage.classList.remove('hidden');
+    }
 }
 
-// === Reiniciar / reset do questionário ===
+// Limpa credenciais do recrutador
+function clearRecruiterCredentials() {
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    if (usernameInput) usernameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+}
+
+// Exibe todos os resultados (agora buscando os dois)
+window.viewAllResults = async function() {
+    showScreen('resultsView');
+    const resultsContainer = document.getElementById('resultsView');
+    resultsContainer.innerHTML = ''; // Limpa o conteúdo
+
+    try {
+        const response = await fetch('/.netlify/functions/getDashboardResults');
+        if (!response.ok) throw new Error('Erro ao buscar os dados.');
+
+        const allResults = await response.json();
+        const candidateResults = allResults.candidateResults || [];
+        const employerResults = allResults.employerResults || [];
+
+        const backButtonHtml = `<button onclick="backToRecruiterDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar para o Dashboard</button>`;
+        resultsContainer.innerHTML += backButtonHtml;
+
+        // Resultados dos Colaboradores
+        resultsContainer.innerHTML += `<div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">Resultados dos Colaboradores</h2>
+            <div id="candidateResultsList" class="space-y-4"></div>
+        </div>`;
+        const candidateResultsList = document.getElementById('candidateResultsList');
+
+        if (candidateResults.length === 0) {
+            candidateResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de colaborador encontrado.</p>`;
+        } else {
+            candidateResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            candidateResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    <p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Pontuação Total:</strong> ${data.totalScore}</p>
+                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>
+                `;
+                candidateResultsList.appendChild(resultCard);
+            });
+        }
+
+        // Resultados dos Empregadores
+        resultsContainer.innerHTML += `<div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">Resultados dos Empregadores</h2>
+            <div id="employerResultsList" class="space-y-4"></div>
+        </div>`;
+        const employerResultsList = document.getElementById('employerResultsList');
+
+        if (employerResults.length === 0) {
+            employerResultsList.innerHTML = `<p class="text-center text-gray-500">Nenhum resultado de empregador encontrado.</p>`;
+        } else {
+            employerResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            employerResults.forEach(data => {
+                const date = new Date(data.timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+                resultCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">Avaliação (${date})</h3>
+                    <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
+                    <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
+                    ${isRecruiterProfile ? `<p class="text-gray-700"><strong>Perfil:</strong> ${data.profile}</p>
+                    <p class="text-gray-700"><strong>Descrição:</strong> ${data.description}</p>` : ''}
+                    <p class="text-gray-700"><strong>Pontuação Inovador:</strong> ${data.inovadorScore}</p>
+                    <p class="text-gray-700"><strong>Pontuação Executor:</strong> ${data.executorScore}</p>
+                `;
+                employerResultsList.appendChild(resultCard);
+            });
+        }
+
+    } catch (e) {
+        console.error("Erro ao carregar resultados:", e);
+        resultsContainer.innerHTML = `<p class="text-center text-red-500">Erro ao carregar os resultados.</p>`;
+    }
+}
+
+// Função para o botão de voltar ao dashboard
+window.backToRecruiterDashboard = function() {
+    showScreen('recruiterDashboard');
+    clearRecruiterCredentials();
+}
+
+// Funções globais
+window.showModal = function(message) {
+    alert(message);
+}
+
+window.shuffleQuestions = function(formId) {
+    const form = document.getElementById(formId);
+    const questionCards = Array.from(form.querySelectorAll('.question-card:not(:nth-child(1)):not(:nth-child(2))'));
+
+    for (let i = questionCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questionCards[i], questionCards[j]] = [questionCards[j], questionCards[i]];
+    }
+
+    questionCards.forEach(card => form.appendChild(card));
+
+    questionCards.forEach((card, index) => {
+        const pElement = card.querySelector('p');
+        if (pElement) {
+            const originalText = pElement.innerText.replace(/^\d+\.\s*/, '');
+            pElement.innerText = `${index + 1}. ${originalText}`;
+        }
+    });
+}
+
+// Submissão do questionário do colaborador
+window.submitResults = async function() {
+    const nameInput = document.getElementById('name').value.trim();
+    const emailInput = document.getElementById('email').value.trim();
+
+    if (!nameInput || !emailInput) {
+        showModal("Por favor, preencha seu nome e e-mail antes de continuar.");
+        return;
+    }
+
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = true;
+    submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+
+    const form = document.getElementById('employeeForm');
+    const statusMessage = document.getElementById('statusMessage');
+
+    let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
+    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+    const questionCategories = {
+        'q1': { inovador: true, especialista: true },
+        'q2': { inovador: true },
+        'q3': { inovador: true },
+        'q4': { executor: true },
+        'q5': { executor: true },
+        'q6': { inovador: true },
+        'q7': { executor: true },
+        'q8': { inovador: true },
+        'q9': { inovador: true, especialista: true },
+        'q10': { inovador: true }
+    };
+
+    for (const q of questionNames) {
+        const slider = form.querySelector(`input[name="${q}"]`);
+        const value = parseInt(slider.value, 10);
+        totalScore += value;
+        const category = questionCategories[q];
+        if (category.inovador) inovadorScore += value;
+        if (category.executor) executorScore += value;
+        if (category.especialista) especialistaScore += (6 - value);
+    }
+
+    const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
+    let profile = "", description = "";
+
+    if (maxScore === inovadorScore) {
+        profile = "O Inovador";
+        description = "Você é um profissional proativo e adaptável. Você busca soluções, toma iniciativa e prefere trabalhar com autonomia para gerar os melhores resultados. É um agente de mudança em qualquer equipe.";
+    } else if (maxScore === executorScore) {
+        profile = "O Executor Estratégico";
+        description = "Você é focado, colaborativo e se destaca na execução de tarefas. Você trabalha bem em equipe, segue processos de forma eficiente e se dedica a garantir que os objetivos sejam atingidos. Você é a espinha dorsal de qualquer operação.";
+    } else {
+        profile = "O Especialista Fiel";
+        description = "Você é um profissional metódico e confiável. Você se sente mais confortável em ambientes estruturados, seguindo diretrizes claras. Sua dedicação e precisão são o alicerce para manter a rotina e a estabilidade da empresa.";
+    }
+
+    try {
+        const response = await fetch('/.netlify/functions/saveResult', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nameInput,
+                email: emailInput,
+                profile: profile,
+                description: description,
+                totalScore: totalScore,
+                inovadorScore: inovadorScore,
+                executorScore: executorScore,
+                especialistaScore: especialistaScore
+            })
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar os dados.');
+
+        statusMessage.classList.remove('hidden');
+        statusMessage.classList.add('bg-green-100', 'text-green-800');
+
+        let successContent = isRecruiterProfile
+                ? `<p class="font-bold text-lg">Questionário respondido com sucesso!</p>
+                  <p class="mt-2 text-md">O resultado foi armazenado no banco de dados.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Refazer Questionário</button>`
+                : `<p class="font-bold text-lg">Questionário finalizado com sucesso!</p>
+                  <p class="mt-2 text-md">Agradecemos sua participação. Clique abaixo para voltar ao início.</p>
+                  <button onclick="resetQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">Voltar ao Início</button>`;
+
+        statusMessage.innerHTML = successContent;
+        form.classList.add('hidden');
+    } catch (e) {
+        console.error("Erro ao salvar o resultado: ", e);
+        showModal("Houve um erro ao finalizar o questionário. Por favor, tente novamente.");
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+}
+
 window.resetQuestionnaire = function() {
-  const form = document.getElementById('employeeForm');
-  if (form) form.reset();
-  form?.classList.remove('hidden');
-  const status = document.getElementById('statusMessage');
-  if (status) status.classList.add('hidden');
-  const submitButton = document.getElementById('submitButton');
-  if (submitButton) { submitButton.disabled = false; submitButton.classList.remove('opacity-60', 'cursor-not-allowed'); }
+    const form = document.getElementById('employeeForm');
+    form.reset();
+    form.classList.remove('hidden');
+    document.getElementById('statusMessage').classList.add('hidden');
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = false;
+    submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
 
-  if (isRecruiterProfile) showRecruiterDashboard();
-  else showRoleSelection();
-};
-
-// === Inicializações / listeners para formulários que usam submit ===
-document.addEventListener('DOMContentLoaded', () => {
-  // intercepta submit do recruiterLoginForm (caso esteja em form)
-  const loginForm = document.getElementById('recruiterLoginForm');
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      loginRecruiter();
-    });
-  }
-
-  // prepara embaralhamento das perguntas do colaborador quando abrir
-  const startBtns = document.querySelectorAll('[onclick^="startQuestionnaire"]');
-  startBtns.forEach(b => b.addEventListener('click', () => {
-    setTimeout(() => shuffleQuestions('employeeForm'), 50);
-  }));
-
-  // recupera estado de login (se houver)
-  const logged = JSON.parse(localStorage.getItem('loggedRecruiter') || 'null');
-  if (logged) {
-    // se preferir, pode automaticamente ir ao painel:
-    // showRecruiterDashboard();
-    console.info('Recrutador logado:', logged.email);
-  }
-});
+    if (isRecruiterProfile) showRecruiterDashboard();
+    else showRoleSelection();
+}
