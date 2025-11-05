@@ -1,0 +1,51 @@
+// /.netlify/functions/updateRecruiterProfile.js
+import { createClient } from '@supabase/supabase-js';
+
+// === CONFIGURAÇÃO SUPABASE ===
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// === FUNÇÃO PRINCIPAL ===
+export async function handler(event) {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Método não permitido' }) };
+  }
+
+  try {
+    const { name, password, email } = JSON.parse(event.body);
+
+    if (!email) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'E-mail é obrigatório para atualização.' }) };
+    }
+
+    // Atualiza o nome no banco de dados "recruiters"
+    const { error: updateError } = await supabase
+      .from('recruiters')
+      .update({ name })
+      .eq('email', email);
+
+    if (updateError) throw updateError;
+
+    // Atualiza senha se fornecida
+    if (password && password.trim().length >= 6) {
+      const { error: pwError } = await supabase.auth.admin.updateUserByEmail(email, {
+        password
+      });
+      if (pwError) throw pwError;
+    }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Perfil atualizado com sucesso!' })
+    };
+
+  } catch (err) {
+    console.error('Erro ao atualizar perfil:', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Erro interno ao atualizar perfil.' })
+    };
+  }
+}
