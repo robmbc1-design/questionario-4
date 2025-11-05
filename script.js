@@ -319,3 +319,70 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+// === PERFIL DO RECRUTADOR ===
+
+// Exibe a tela de perfil do recrutador
+window.showRecruiterProfile = function() {
+  isRecruiterProfile = true;
+  showScreen('recruiterProfile');
+
+  // Simulação: carregar dados do recrutador logado
+  const recruiterData = JSON.parse(localStorage.getItem('loggedRecruiter')) || {
+    name: 'Recrutador',
+    email: 'recrutador@empresa.com'
+  };
+
+  document.getElementById('recruiterName').value = recruiterData.name || '';
+  document.getElementById('recruiterEmail').value = recruiterData.email || '';
+  document.getElementById('recruiterPassword').value = '';
+};
+
+// Atualiza os dados do perfil
+window.updateRecruiterProfile = async function() {
+  const name = document.getElementById('recruiterName').value.trim();
+  const password = document.getElementById('recruiterPassword').value.trim();
+  const statusMessage = document.getElementById('profileStatusMessage');
+  statusMessage.classList.add('hidden');
+
+  if (!name) {
+    statusMessage.textContent = 'Por favor, preencha o nome.';
+    statusMessage.classList.remove('hidden', 'text-green-600');
+    statusMessage.classList.add('text-red-600');
+    return;
+  }
+
+  try {
+    // Envia atualização para o servidor (opcional)
+    const response = await fetch('/.netlify/functions/updateRecruiterProfile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, password })
+    });
+
+    if (!response.ok) throw new Error('Erro ao salvar perfil.');
+
+    // Atualiza no localStorage
+    const current = JSON.parse(localStorage.getItem('loggedRecruiter')) || {};
+    current.name = name;
+    localStorage.setItem('loggedRecruiter', JSON.stringify(current));
+
+    statusMessage.textContent = 'Perfil atualizado com sucesso!';
+    statusMessage.classList.remove('hidden', 'text-red-600');
+    statusMessage.classList.add('text-green-600');
+
+    document.getElementById('recruiterPassword').value = '';
+  } catch (e) {
+    console.error('Erro ao atualizar perfil:', e);
+    statusMessage.textContent = 'Erro ao atualizar o perfil.';
+    statusMessage.classList.remove('hidden', 'text-green-600');
+    statusMessage.classList.add('text-red-600');
+  }
+};
+
+// Logout do recrutador
+window.logoutRecruiter = function() {
+  localStorage.removeItem('loggedRecruiter');
+  isRecruiterProfile = false;
+  showRoleSelection();
+};
+
