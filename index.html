@@ -58,6 +58,50 @@
     </div>
 
     <div id="recruiterDashboard" class="hidden full-screen-center">
+        <!-- Perfil do Recrutador -->
+<div id="recruiterProfile" class="hidden max-w-3xl mx-auto mt-10 bg-white shadow-md rounded-lg p-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Perfil do Recrutador</h2>
+
+  <form id="recruiterProfileForm" class="space-y-6">
+    <div>
+      <label for="recruiterName" class="block text-gray-700 font-medium mb-2">Nome</label>
+      <input type="text" id="recruiterName" name="recruiterName" 
+             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Seu nome completo">
+    </div>
+
+    <div>
+      <label for="recruiterEmail" class="block text-gray-700 font-medium mb-2">E-mail</label>
+      <input type="email" id="recruiterEmail" name="recruiterEmail"
+             class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed" disabled>
+    </div>
+
+    <div>
+      <label for="recruiterPassword" class="block text-gray-700 font-medium mb-2">Nova Senha (opcional)</label>
+      <input type="password" id="recruiterPassword" name="recruiterPassword"
+             class="w-full border border-gray-300 rounded-lg px-4 py-2" placeholder="Digite uma nova senha">
+    </div>
+
+    <div class="flex justify-between mt-8">
+      <button type="button" onclick="backToRecruiterDashboard()" 
+              class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+        Voltar
+      </button>
+      <button type="button" onclick="updateRecruiterProfile()" 
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+        Salvar Alterações
+      </button>
+    </div>
+  </form>
+
+  <div id="profileStatusMessage" class="hidden mt-6 text-center text-sm"></div>
+
+  <div class="flex justify-center mt-8">
+    <button onclick="logoutRecruiter()" 
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+      Sair da Conta
+    </button>
+  </div>
+</div>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-6">Painel do Recrutador</h1>
         <p class="text-lg text-gray-600 mb-8">Selecione uma das opções abaixo.</p>
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center">
@@ -377,6 +421,7 @@
 
 </body>
 </html>
+
 
 
 
