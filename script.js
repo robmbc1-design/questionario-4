@@ -41,7 +41,6 @@ window.showRecruiterLogin = function() {
 window.showRecruiterDashboard = function() {
     isRecruiterProfile = true;
     showScreen('recruiterDashboard');
-    window.viewAllResults();
 }
 
 window.startQuestionnaire = function(isRecruiter = false) {
@@ -319,3 +318,4 @@ window.resetQuestionnaire = function() {
     if (isRecruiterProfile) showRecruiterDashboard();
     else showRoleSelection();
 }
+
