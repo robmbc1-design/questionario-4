@@ -12,6 +12,27 @@ window.showScreen = function(screenId) {
     if (targetElement) targetElement.classList.remove('hidden');
 }
 
+window.showScreen = function(screenId) {
+    const screens = [
+        'roleSelectionScreen',
+        'candidateWelcomeScreen',
+        'employerWelcomeScreen', // ✅ adiciona aqui
+        'recruiterLoginScreen',
+        'recruiterDashboard',
+        'questionnaire',
+        'resultsView',
+        'employerQuestionnaire'
+    ];
+
+    screens.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.add('hidden');
+    });
+
+    const targetElement = document.getElementById(screenId);
+    if (targetElement) targetElement.classList.remove('hidden');
+};
+
 // Funções de navegação
 window.showRoleSelection = function() {
     isRecruiterProfile = false;
@@ -29,8 +50,11 @@ window.showCandidateWelcome = function() {
 
 // Função para o botão Empregador
 window.showEmployerWelcome = function() {
-    window.location.href = 'employer.html';
-}
+    isRecruiterProfile = false;
+    showScreen('employerWelcomeScreen');
+};
+
+
 
 window.showRecruiterLogin = function() {
     isRecruiterProfile = true;
@@ -319,3 +343,8 @@ window.resetQuestionnaire = function() {
     else showRoleSelection();
 }
 
+window.startEmployerQuestionnaire = function() {
+    showScreen('employerQuestionnaire');
+    const employerForm = document.getElementById('employerForm');
+    if (employerForm) employerForm.reset();
+}
