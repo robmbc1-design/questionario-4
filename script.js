@@ -348,3 +348,166 @@ window.startEmployerQuestionnaire = function() {
     const employerForm = document.getElementById('employerForm');
     if (employerForm) employerForm.reset();
 }
+
+// ========================================
+// QUESTIONÁRIO DO EMPREGADOR
+// ========================================
+
+window.submitEmployerResults = async function() {
+    const nameInput = document.getElementById('employerName').value.trim();
+    const emailInput = document.getElementById('employerEmail').value.trim();
+
+    // Validação básica
+    if (!nameInput || !emailInput) {
+        alert("Por favor, preencha seu nome e e-mail antes de continuar.");
+        return;
+    }
+
+    // Validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) {
+        alert("Por favor, insira um e-mail válido.");
+        return;
+    }
+
+    // Desabilita o botão durante o envio
+    const submitButton = document.getElementById('submitEmployerButton');
+    submitButton.disabled = true;
+    submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+    submitButton.textContent = 'Enviando...';
+
+    const form = document.getElementById('employerForm');
+    const statusMessage = document.getElementById('statusEmployerMessage');
+
+    // Calcula as pontuações
+    let inovadorScore = 0, executorScore = 0;
+    const questionNames = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+
+    for (const q of questionNames) {
+        const slider = form.querySelector(`input[name="${q}"]`);
+        if (!slider) {
+            console.error(`Slider não encontrado: ${q}`);
+            continue;
+        }
+        const value = parseInt(slider.value, 10);
+        
+        // Quanto maior o valor, mais inovador
+        inovadorScore += value;
+        // Quanto menor o valor, mais executor
+        executorScore += (6 - value);
+    }
+
+    // Define o perfil desejado
+    let profile = "", description = "";
+    
+    if (inovadorScore > executorScore) {
+        profile = "Busca Inovadores";
+        description = "Você busca profissionais proativos, criativos e que tomam iniciativa. Valoriza autonomia e inovação na equipe.";
+    } else if (executorScore > inovadorScore) {
+        profile = "Busca Executores";
+        description = "Você busca profissionais focados, organizados e que seguem processos estabelecidos. Valoriza consistência e confiabilidade.";
+    } else {
+        profile = "Busca Perfil Equilibrado";
+        description = "Você busca profissionais que equilibram inovação com execução, capazes de tanto criar quanto implementar.";
+    }
+
+    try {
+        console.log('📤 Enviando dados do empregador:', {
+            name: nameInput,
+            email: emailInput,
+            profile: profile,
+            inovadorScore: inovadorScore,
+            executorScore: executorScore
+        });
+
+        const response = await fetch('/.netlify/functions/saveEmployerResult', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: nameInput,
+                email: emailInput,
+                profile: profile,
+                description: description,
+                inovadorScore: inovadorScore,
+                executorScore: executorScore
+            })
+        });
+
+        console.log('📥 Response status:', response.status);
+        
+        const responseData = await response.json();
+        console.log('📥 Response data:', responseData);
+
+        if (!response.ok) {
+            throw new Error(responseData.error || responseData.message || 'Erro ao salvar os dados.');
+        }
+
+        // Mostra mensagem de sucesso
+        statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800');
+        statusMessage.classList.add('bg-green-100', 'text-green-800');
+        statusMessage.innerHTML = `
+            <p class="font-bold text-lg mb-2">✅ Questionário finalizado com sucesso!</p>
+            <div class="bg-white p-4 rounded-lg mt-3">
+                <p class="text-gray-800 mb-2"><strong>Perfil Desejado:</strong> ${profile}</p>
+                <p class="text-gray-600 text-sm">${description}</p>
+            </div>
+            <p class="text-sm mt-3 text-gray-600">Pontuação Inovador: ${inovadorScore} | Pontuação Executor: ${executorScore}</p>
+            <button onclick="resetEmployerQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">
+                Voltar ao Início
+            </button>
+        `;
+        
+        // Esconde o formulário
+        form.classList.add('hidden');
+        
+        // Esconde o botão de submit original
+        submitButton.classList.add('hidden');
+
+    } catch (e) {
+        console.error("❌ Erro ao salvar o resultado:", e);
+        
+        // Mostra mensagem de erro
+        statusMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800');
+        statusMessage.classList.add('bg-red-100', 'text-red-800');
+        statusMessage.innerHTML = `
+            <p class="font-bold text-lg mb-2">❌ Erro ao salvar</p>
+            <p class="text-sm">${e.message}</p>
+            <button onclick="document.getElementById('statusEmployerMessage').classList.add('hidden')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mt-4">
+                Tentar Novamente
+            </button>
+        `;
+        
+        // Reabilita o botão
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        submitButton.textContent = 'Finalizar Questionário';
+    }
+}
+
+// Função para resetar o questionário do empregador
+window.resetEmployerQuestionnaire = function() {
+    const form = document.getElementById('employerForm');
+    const statusMessage = document.getElementById('statusEmployerMessage');
+    const submitButton = document.getElementById('submitEmployerButton');
+    
+    // Reseta o formulário
+    form.reset();
+    form.classList.remove('hidden');
+    
+    // Esconde a mensagem de status
+    statusMessage.classList.add('hidden');
+    statusMessage.innerHTML = '';
+    
+    // Reabilita e mostra o botão
+    submitButton.disabled = false;
+    submitButton.classList.remove('hidden', 'bg-gray-400', 'cursor-not-allowed');
+    submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    submitButton.textContent = 'Finalizar Questionário';
+    
+    // Volta para a tela de seleção
+    showRoleSelection();
+}
