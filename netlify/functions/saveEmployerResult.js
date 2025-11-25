@@ -1,4 +1,4 @@
-// Arquivo: netlify/functions/saveEmployerResult.js
+// Arquivo: netlify/functions/saveEmpolyResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
