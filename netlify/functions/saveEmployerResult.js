@@ -1,23 +1,51 @@
-// Arquivo: netlify/functions/saveEmployerResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async (event) => {
+    // ✅ CORS headers obrigatórios
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    // ✅ Handle preflight request
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+        return { 
+            statusCode: 405, 
+            headers,
+            body: JSON.stringify({ error: 'Método não permitido' })
+        };
     }
 
     try {
         const data = JSON.parse(event.body);
+        console.log('📥 Dados recebidos:', data);
 
-        // Gera timestamp no horário de Brasília
-        const timestamp = new Date().toLocaleString('sv', { timeZone: 'America/Sao_Paulo' });
+        // Timestamp em ISO format
+        const timestamp = new Date().toISOString();
 
-        // 1. Verifica se já existe registro com o mesmo email
+        // Prepara os dados
+        const employerData = {
+            name: data.name,
+            email: data.email,
+            profile: data.profile,
+            description: data.description,
+            inovadorScore: data.inovadorScore,
+            executorScore: data.executorScore,
+            timestamp: timestamp
+        };
+
+        console.log('💾 Salvando no Supabase:', employerData);
+
+        // Verifica se já existe registro com esse email
         const { data: existing, error: selectError } = await supabase
             .from('questionario_resultados_empregador')
             .select('id')
@@ -25,62 +53,69 @@ exports.handler = async (event) => {
             .maybeSingle();
 
         if (selectError) {
-            console.error("Erro ao verificar registro existente:", selectError);
+            console.error("❌ Erro ao verificar registro:", selectError);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: 'Erro ao verificar registro existente.' })
+                headers,
+                body: JSON.stringify({ 
+                    error: 'Erro ao verificar registro existente.',
+                    details: selectError.message
+                })
             };
         }
 
-        let error;
+        let error, result;
+
         if (existing) {
-            // 2. Se já existe → update (inclui atualização de timestamp)
-            ({ error } = await supabase
+            console.log('♻️ Atualizando registro existente');
+            ({ data: result, error } = await supabase
                 .from('questionario_resultados_empregador')
-                .update({
-                    name: data.name,
-                    profile: data.profile,
-                    description: data.description,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    timestamp: timestamp
-                })
+                .update(employerData)
                 .eq('email', data.email)
+                .select()
             );
         } else {
-            // 3. Se não existe → insert (inclui timestamp)
-            ({ error } = await supabase
+            console.log('➕ Criando novo registro');
+            ({ data: result, error } = await supabase
                 .from('questionario_resultados_empregador')
-                .insert([{
-                    name: data.name,
-                    email: data.email,
-                    profile: data.profile,
-                    description: data.description,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    timestamp: timestamp
-                }])
+                .insert([employerData])
+                .select()
             );
         }
 
         if (error) {
-            console.error("Erro ao salvar no Supabase:", error);
+            console.error("❌ Erro ao salvar no Supabase:", error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: error.message, details: error.details })
+                headers,
+                body: JSON.stringify({ 
+                    error: error.message,
+                    details: error.details,
+                    hint: error.hint
+                })
             };
         }
 
+        console.log('✅ Salvo com sucesso:', result);
+
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
+            headers,
+            body: JSON.stringify({ 
+                message: 'Dados salvos com sucesso!',
+                data: result
+            })
         };
 
     } catch (e) {
-        console.error("Erro na função:", e);
+        console.error("❌ Erro na função:", e);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Erro interno do servidor.' })
+            headers,
+            body: JSON.stringify({ 
+                error: 'Erro interno do servidor.',
+                message: e.message
+            })
         };
     }
 };
