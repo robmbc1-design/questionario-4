@@ -1,86 +1,48 @@
-// Arquivo: netlify/functions/saveEmpolyResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event) => {
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+    if (event.httpMethod !== 'GET') {
+        return {
+            statusCode: 405,
+            body: JSON.stringify({ message: "Method Not Allowed" }),
+        };
     }
 
     try {
-        const data = JSON.parse(event.body);
+        // Busca os resultados do questionário do colaborador
+        const { data: candidateResults, error: candidateError } = await supabase
+            .from('questionario_resultados')
+            .select('*');
 
-        // Gera timestamp no horário de Brasília
-        const timestamp = new Date().toLocaleString('sv', { timeZone: 'America/Sao_Paulo' });
-
-        // 1. Verifica se já existe registro com o mesmo email
-        const { data: existing, error: selectError } = await supabase
+        // Busca os resultados do questionário do empregador
+        const { data: employerResults, error: employerError } = await supabase
             .from('questionario_resultados_empregador')
-            .select('id')
-            .eq('email', data.email)
-            .maybeSingle();
+            .select('*');
 
-        if (selectError) {
-            console.error("Erro ao verificar registro existente:", selectError);
+        if (candidateError || employerError) {
+            console.error('Erro ao buscar os resultados:', candidateError || employerError);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: 'Erro ao verificar registro existente.' })
+                body: JSON.stringify({ message: 'Erro ao buscar os resultados.', error: candidateError || employerError }),
             };
         }
 
-        let error;
-        if (existing) {
-            // 2. Se já existe → update (inclui atualização de timestamp)
-            ({ error } = await supabase
-                .from('questionario_resultados_empregador')
-                .update({
-                    name: data.name,
-                    profile: data.profile,
-                    description: data.description,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    timestamp: timestamp
-                })
-                .eq('email', data.email)
-            );
-        } else {
-            // 3. Se não existe → insert (inclui timestamp)
-            ({ error } = await supabase
-                .from('questionario_resultados_empregador')
-                .insert([{
-                    name: data.name,
-                    email: data.email,
-                    profile: data.profile,
-                    description: data.description,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    timestamp: timestamp
-                }])
-            );
-        }
-
-        if (error) {
-            console.error("Erro ao salvar no Supabase:", error);
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ error: error.message, details: error.details })
-            };
-        }
-
+        // Retorna os dois conjuntos de resultados separados
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
+            body: JSON.stringify({ candidateResults, employerResults }),
         };
 
     } catch (e) {
-        console.error("Erro na função:", e);
+        console.error('Erro na função:', e);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Erro interno do servidor.' })
+            body: JSON.stringify({ message: 'Erro interno do servidor.' }),
         };
     }
 };
