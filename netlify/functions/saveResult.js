@@ -1,90 +1,160 @@
-// Arquivo: netlify/functions/saveResult.js
+// netlify/functions/saveResult.js
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Variáveis de ambiente do Supabase não configuradas');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async (event) => {
+    // CORS headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    // Handle preflight
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+        return { 
+            statusCode: 405, 
+            headers,
+            body: JSON.stringify({ error: 'Método não permitido' })
+        };
     }
 
     try {
         const data = JSON.parse(event.body);
+        console.log('📥 Dados recebidos:', data);
 
-        // Gera timestamp no horário de Brasília
-        const timestamp = new Date().toLocaleString('sv', { timeZone: 'America/Sao_Paulo' });
-
-        // 1. Verifica se já existe registro com o mesmo email
-        const { data: existing, error: selectError } = await supabase
-            .from('questionario_resultados')
-            .select('id')
-            .eq('email', data.email)
-            .maybeSingle();
-
-        if (selectError) {
-            console.error("Erro ao verificar registro existente:", selectError);
+        // Validação de campos obrigatórios
+        const requiredFields = ['name', 'email', 'profile', 'description', 'totalScore'];
+        const missingFields = requiredFields.filter(field => !data[field] && data[field] !== 0);
+        
+        if (missingFields.length > 0) {
+            console.error('❌ Campos faltando:', missingFields);
             return {
-                statusCode: 500,
-                body: JSON.stringify({ error: 'Erro ao verificar registro existente.' })
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ 
+                    error: 'Campos obrigatórios faltando',
+                    missing: missingFields 
+                })
             };
         }
 
-        let error;
-        if (existing) {
-            // 2. Se já existe → update (inclui atualização de timestamp)
-            ({ error } = await supabase
-                .from('questionario_resultados')
-                .update({
-                    name: data.name,
-                    profile: data.profile,
-                    description: data.description,
-                    totalScore: data.totalScore,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    especialistaScore: data.especialistaScore,
-                    timestamp: timestamp
+        // Validação de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email)) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'E-mail inválido' })
+            };
+        }
+
+        // Timestamp ISO
+        const timestamp = new Date().toISOString();
+
+        // ✅ Prepara dados SEM questionIds (para compatibilidade)
+        const resultData = {
+            name: data.name.trim(),
+            email: data.email.trim().toLowerCase(),
+            profile: data.profile,
+            description: data.description,
+            totalScore: parseInt(data.totalScore) || 0,
+            inovadorScore: parseInt(data.inovadorScore) || 0,
+            executorScore: parseInt(data.executorScore) || 0,
+            especialistaScore: parseInt(data.especialistaScore) || 0,
+            timestamp: timestamp
+        };
+
+        console.log('💾 Salvando no Supabase:', resultData);
+
+        // Verifica se já existe
+        const { data: existing, error: selectError } = await supabase
+            .from('questionario_resultados')
+            .select('id')
+            .eq('email', resultData.email)
+            .maybeSingle();
+
+        if (selectError) {
+            console.error("❌ Erro ao verificar registro:", selectError);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ 
+                    error: 'Erro ao verificar registro existente.',
+                    details: selectError.message,
+                    hint: selectError.hint
                 })
-                .eq('email', data.email)
+            };
+        }
+
+        let error, result;
+
+        if (existing) {
+            console.log('♻️ Atualizando registro existente:', existing.id);
+            ({ data: result, error } = await supabase
+                .from('questionario_resultados')
+                .update(resultData)
+                .eq('email', resultData.email)
+                .select()
+                .single()
             );
         } else {
-            // 3. Se não existe → insert (inclui timestamp)
-            ({ error } = await supabase
+            console.log('➕ Criando novo registro');
+            ({ data: result, error } = await supabase
                 .from('questionario_resultados')
-                .insert([{
-                    name: data.name,
-                    email: data.email,
-                    profile: data.profile,
-                    description: data.description,
-                    totalScore: data.totalScore,
-                    inovadorScore: data.inovadorScore,
-                    executorScore: data.executorScore,
-                    especialistaScore: data.especialistaScore,
-                    timestamp: timestamp
-                }])
+                .insert([resultData])
+                .select()
+                .single()
             );
         }
 
         if (error) {
-            console.error("Erro ao salvar no Supabase:", error);
+            console.error("❌ Erro ao salvar no Supabase:", error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: error.message, details: error.details })
+                headers,
+                body: JSON.stringify({ 
+                    error: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                })
             };
         }
 
+        console.log('✅ Salvo com sucesso:', result);
+
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Dados salvos/atualizados com sucesso!' })
+            headers,
+            body: JSON.stringify({ 
+                message: existing ? 'Dados atualizados com sucesso!' : 'Dados salvos com sucesso!',
+                id: result.id
+            })
         };
 
     } catch (e) {
-        console.error("Erro na função:", e);
+        console.error("❌ Erro na função:", e);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Erro interno do servidor.' })
+            headers,
+            body: JSON.stringify({ 
+                error: 'Erro interno do servidor.',
+                message: e.message,
+                stack: e.stack
+            })
         };
     }
 };
