@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conecta RH - Análise de Perfil</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="p-4 sm:p-6">
@@ -40,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Tela de saudação do Empregador -->
     <div id="employerWelcomeScreen" class="hidden full-screen-center">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">
             Olá, Empregador(a)!
@@ -80,10 +82,16 @@
         <p class="text-lg text-gray-600 mb-8">Selecione uma das opções abaixo.</p>
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center">
             <button onclick="viewAllResults()" class="action-button bg-green-600 hover:bg-green-700">
-                Ver Resultados Salvos
+                📊 Ver Resultados
+            </button>
+            <button onclick="showMatchingScreen()" class="action-button bg-purple-600 hover:bg-purple-700">
+                🎯 Matching
+            </button>
+            <button onclick="showAdminQuestions()" class="action-button bg-orange-600 hover:bg-orange-700">
+                📝 Gerenciar Perguntas
             </button>
             <button onclick="startQuestionnaire(true)" class="action-button bg-blue-600 hover:bg-blue-700">
-                Responder o Questionário
+                ✏️ Responder Questionário
             </button>
         </div>
         <button onclick="showRoleSelection()" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
@@ -91,9 +99,119 @@
         </button>
     </div>
 
+    <!-- ✅ TELA DE MATCHING -->
+    <div id="matchingScreen" class="hidden">
+        <div class="container">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">🎯 Sistema de Matching</h1>
+            <p class="text-center text-gray-600 mb-8">Compare colaboradores com as necessidades dos empregadores</p>
+            
+            <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                <h2 class="text-xl font-bold mb-4">Como funciona?</h2>
+                <p class="text-gray-700">O sistema compara as pontuações dos colaboradores com o que os empregadores buscam e calcula a compatibilidade.</p>
+            </div>
+            
+            <div id="matchingResults" class="space-y-4"></div>
+            
+            <button onclick="showRecruiterDashboard()" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
+                &lt; Voltar ao Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- ✅ TELA DE ADMIN DE PERGUNTAS -->
+    <div id="adminQuestionsScreen" class="hidden">
+        <div class="container">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">📝 Gerenciar Perguntas</h1>
+            
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showAddQuestionModal()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    ➕ Nova Pergunta
+                </button>
+                <div class="text-sm text-gray-600">
+                    <span id="totalQuestionsCount">0</span> perguntas ativas
+                </div>
+            </div>
+            
+            <div id="questionsAdminList" class="space-y-4"></div>
+            
+            <button onclick="showRecruiterDashboard()" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
+                &lt; Voltar ao Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- ✅ MODAL PARA ADICIONAR/EDITAR PERGUNTA -->
+    <div id="questionModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 class="text-2xl font-bold mb-4" id="modalTitle">Nova Pergunta</h2>
+            <form id="questionForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Texto da Pergunta:</label>
+                    <textarea id="modalQuestionText" class="w-full px-4 py-2 border rounded-lg" rows="3" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Opção Esquerda:</label>
+                    <input type="text" id="modalLeftLabel" class="w-full px-4 py-2 border rounded-lg" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Opção Direita:</label>
+                    <input type="text" id="modalRightLabel" class="w-full px-4 py-2 border rounded-lg" required>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Categoria:</label>
+                        <select id="modalCategory" class="w-full px-4 py-2 border rounded-lg" required>
+                            <option value="inovador">Inovador</option>
+                            <option value="executor">Executor</option>
+                            <option value="especialista">Especialista</option>
+                            <option value="geral">Geral</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Peso:</label>
+                        <select id="modalWeight" class="w-full px-4 py-2 border rounded-lg" required>
+                            <option value="1">1 (Baixo)</option>
+                            <option value="2" selected>2 (Médio)</option>
+                            <option value="3">3 (Alto)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Dificuldade:</label>
+                        <select id="modalDifficulty" class="w-full px-4 py-2 border rounded-lg" required>
+                            <option value="easy">Fácil</option>
+                            <option value="medium" selected>Médio</option>
+                            <option value="hard">Difícil</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                        Salvar
+                    </button>
+                    <button type="button" onclick="closeQuestionModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="resultsView" class="hidden">
         <div class="container">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Resultados das Avaliações</h1>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">📊 Resultados das Avaliações</h1>
+            
+            <!-- ✅ GRÁFICOS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Distribuição de Perfis (Colaboradores)</h3>
+                    <canvas id="candidateProfileChart"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-bold mb-4">Perfis Desejados (Empregadores)</h3>
+                    <canvas id="employerProfileChart"></canvas>
+                </div>
+            </div>
+            
             <div id="resultsList" class="space-y-6"></div>
             <button onclick="showRecruiterDashboard()" class="mt-4 text-gray-500 hover:text-gray-700 transition duration-200">
                 &lt; Voltar
@@ -101,9 +219,20 @@
         </div>
     </div>
 
-    <!-- ✅ QUESTIONÁRIO DO COLABORADOR - AGORA COM PERGUNTAS DINÂMICAS -->
+    <!-- ✅ QUESTIONÁRIO COM CONTADOR DE PROGRESSO -->
     <div id="questionnaire" class="hidden">
         <div class="container">
+            <!-- Contador de Progresso -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span id="progressText">Pergunta 0 de 10</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+            
             <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">
                 Questionário de Perfil Profissional
             </h1>
@@ -111,15 +240,12 @@
                 Use a barra deslizante para indicar o quão próximo você está de cada uma das opções.
             </p>
             
-            <!-- Loading State -->
             <div id="questionsLoading" class="text-center py-8">
                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
                 <p class="mt-4 text-gray-600">Carregando perguntas...</p>
             </div>
             
-            <!-- Formulário será gerado dinamicamente -->
             <form id="employeeForm" class="space-y-6 hidden">
-                <!-- Nome e Email (sempre fixos) -->
                 <div class="question-card">
                     <label for="name" class="block text-gray-700 font-bold mb-2">Seu nome completo:</label>
                     <input type="text" id="name" name="name" 
@@ -134,7 +260,6 @@
                            placeholder="Digite um e-mail válido" required>
                 </div>
                 
-                <!-- Perguntas serão inseridas aqui via JavaScript -->
                 <div id="dynamicQuestions"></div>
             </form>
 
@@ -156,7 +281,6 @@
         </div>
     </div>
     
-    <!-- QUESTIONÁRIO DO EMPREGADOR (sem mudanças) -->
     <div id="employerQuestionnaire" class="hidden">
         <div class="container">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Questionário de Perfil do Funcionário Desejado</h1>
