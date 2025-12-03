@@ -1,0 +1,48 @@
+// ========================================
+// toggleQuestion.js
+// netlify/functions/toggleQuestion.js
+// ========================================
+
+const { createClient: createClient3 } = require('@supabase/supabase-js');
+
+const supabaseUrl3 = process.env.SUPABASE_URL;
+const supabaseServiceKey3 = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase3 = createClient3(supabaseUrl3, supabaseServiceKey3);
+
+exports.handler = async (event) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
+    try {
+        const params = event.queryStringParameters;
+        const id = params.id;
+        const active = params.active === 'true';
+
+        const { error } = await supabase3
+            .from('question_bank')
+            .update({ active: active })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ message: 'Status atualizado!' })
+        };
+    } catch (e) {
+        console.error("Erro:", e);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: e.message })
+        };
+    }
+};
