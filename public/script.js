@@ -915,3 +915,711 @@ window.resetEmployerQuestionnaire = function() {
 window.showModal = function(message) {
     alert(message);
 }
+// ========================================
+// INTEGRAÇÃO DO SISTEMA AVANÇADO DE ANÁLISE
+// Cole este código no seu script.js (substitui a função submitResults)
+// ========================================
+
+// ========================================
+// 1. ATUALIZAR PERGUNTAS COM MAPEAMENTO
+// ========================================
+
+const enhancedFallbackQuestions = [
+    { 
+        id: 'fb-1', 
+        text: 'Ao iniciar um novo projeto, você prefere ter autonomia para planejar e executar, ou seguir um plano já detalhado?', 
+        leftLabel: 'Prefiro seguir um plano detalhado', 
+        rightLabel: 'Prefiro ter autonomia total', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'autonomyVsCollaboration'
+    },
+    { 
+        id: 'fb-2', 
+        text: 'Em um ambiente de trabalho de alta pressão, como você se adapta?', 
+        leftLabel: 'Sigo os processos já estabelecidos', 
+        rightLabel: 'Busco novas soluções criativas', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'adaptabilityVsStability'
+    },
+    { 
+        id: 'fb-3', 
+        text: 'Em relação à sua função, qual a sua motivação principal?', 
+        leftLabel: 'Garantir execução consistente', 
+        rightLabel: 'Explorar novas tecnologias e ideias', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'innovationVsExecution'
+    },
+    { 
+        id: 'fb-4', 
+        text: 'Ao se deparar com um obstáculo, você prefere:', 
+        leftLabel: 'Pedir orientação de um supervisor', 
+        rightLabel: 'Buscar solução por conta própria', 
+        category: 'executor', 
+        weight: 2,
+        mapping: 'autonomyVsCollaboration'
+    },
+    { 
+        id: 'fb-5', 
+        text: 'Quando você contribui em um projeto, você foca em:', 
+        leftLabel: 'Execução impecável de cada etapa', 
+        rightLabel: 'Definir estratégia e direção geral', 
+        category: 'executor', 
+        weight: 2,
+        mapping: 'leadershipVsExecution'
+    },
+    { 
+        id: 'fb-6', 
+        text: 'Em um ambiente de inovação, você se sente mais confortável em:', 
+        leftLabel: 'Apoiar a execução de ideias', 
+        rightLabel: 'Propor ativamente novas ideias', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'innovationVsExecution'
+    },
+    { 
+        id: 'fb-7', 
+        text: 'Sua relação com a rotina no trabalho:', 
+        leftLabel: 'Me sinto seguro com rotina clara', 
+        rightLabel: 'Preciso de desafios constantes', 
+        category: 'especialista', 
+        weight: 1,
+        mapping: 'adaptabilityVsStability'
+    },
+    { 
+        id: 'fb-8', 
+        text: 'Em reuniões de equipe, você se vê mais como:', 
+        leftLabel: 'Um ouvinte que contribui quando necessário', 
+        rightLabel: 'Um participante ativo com ideias', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'leadershipVsExecution'
+    },
+    { 
+        id: 'fb-9', 
+        text: 'O que mais o motiva em um projeto?', 
+        leftLabel: 'Resolver problemas complexos', 
+        rightLabel: 'Ser reconhecido pela eficiência', 
+        category: 'inovador', 
+        weight: 1,
+        mapping: 'analyticalVsIntuitive'
+    },
+    { 
+        id: 'fb-10', 
+        text: 'Ao receber uma tarefa nova, sua expectativa é:', 
+        leftLabel: 'A empresa deve fornecer treinamento', 
+        rightLabel: 'É minha responsabilidade buscar conhecimento', 
+        category: 'inovador', 
+        weight: 2,
+        mapping: 'autonomyVsCollaboration'
+    }
+];
+
+// ========================================
+// 2. RENDERIZAR PERGUNTAS COM MAPEAMENTO
+// ========================================
+
+async function renderQuestions(questions) {
+    const container = document.getElementById('dynamicQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, index) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+        questionCard.setAttribute('data-question-id', q.id);
+        questionCard.setAttribute('data-category', q.category);
+        questionCard.setAttribute('data-weight', q.weight);
+        
+        questionCard.innerHTML = `
+            <p class="font-semibold text-gray-800 mb-4">
+                ${index + 1}. ${q.text}
+            </p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">
+                    ${q.leftLabel}
+                </span>
+                <div class="score-scale w-full">
+                    <input type="range" 
+                           name="q${index}" 
+                           id="q${index}" 
+                           min="1" 
+                           max="5" 
+                           value="3" 
+                           class="w-full"
+                           data-category="${q.category}"
+                           data-weight="${q.weight}"
+                           data-mapping="${q.mapping || 'innovationVsExecution'}">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">
+                    ${q.rightLabel}
+                </span>
+            </div>
+        `;
+        
+        container.appendChild(questionCard);
+    });
+}
+
+// ========================================
+// 3. NOVA FUNÇÃO submitResults INTEGRADA
+// ========================================
+
+window.submitResults = async function() {
+    const nameInput = document.getElementById('name').value.trim();
+    const emailInput = document.getElementById('email').value.trim();
+
+    if (!nameInput || !emailInput) {
+        showNotification("Por favor, preencha seu nome e e-mail antes de continuar.", 'error');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) {
+        showNotification("Por favor, insira um e-mail válido.", 'error');
+        return;
+    }
+
+    const submitButton = document.getElementById('submitButton');
+    disableButton(submitButton, 'Analisando seu perfil...');
+
+    try {
+        // Coleta respostas com metadados completos
+        const answers = [];
+        const sliders = document.getElementById('dynamicQuestions').querySelectorAll('input[type="range"]');
+
+        sliders.forEach((slider, index) => {
+            const questionCard = slider.closest('.question-card');
+            const questionId = questionCard?.getAttribute('data-question-id') || `q${index}`;
+            const category = slider.getAttribute('data-category') || 'geral';
+            const weight = parseFloat(slider.getAttribute('data-weight')) || 1.0;
+            const mapping = slider.getAttribute('data-mapping') || 'innovationVsExecution';
+
+            answers.push({
+                id: questionId,
+                value: parseInt(slider.value, 10),
+                category: category,
+                weight: weight,
+                mapping: mapping
+            });
+        });
+
+        // 🎯 ANÁLISE AVANÇADA
+        const analysis = ProfileAnalyzer.analyzeProfile(answers);
+        
+        // Prepara dados para salvar
+        const resultData = {
+            name: nameInput,
+            email: emailInput,
+            profile: analysis.primaryProfile.name,
+            profileEmoji: analysis.primaryProfile.emoji,
+            secondaryProfile: analysis.secondaryProfile?.name || null,
+            isHybrid: analysis.isHybrid,
+            confidence: analysis.primaryProfile.confidence,
+            description: generateFullDescription(analysis),
+            dimensionScores: analysis.dimensionScores,
+            softSkills: analysis.softSkills,
+            developmentAreas: analysis.developmentAreas,
+            culturalFit: analysis.culturalFit,
+            recommendations: analysis.recommendations,
+            behavioralAnalysis: analysis.behavioralAnalysis,
+            questionIds: currentQuestions.map(q => q.id),
+            timestamp: new Date().toISOString()
+        };
+
+        // Salva no banco de dados
+        const response = await fetch('/.netlify/functions/saveResult', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(resultData)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar resultados');
+
+        // Envia email
+        try {
+            await fetch('/.netlify/functions/sendResultEmail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: emailInput,
+                    name: nameInput,
+                    analysis: analysis
+                })
+            });
+        } catch (emailError) {
+            console.warn('Email não enviado:', emailError);
+        }
+
+        // Exibe resultados na tela
+        displayAdvancedResults(nameInput, analysis);
+        
+        document.getElementById('employeeForm').classList.add('hidden');
+        submitButton.classList.add('hidden');
+
+    } catch (e) {
+        console.error("❌ Erro:", e);
+        showNotification("Houve um erro ao finalizar o questionário: " + e.message, 'error');
+        enableButton(submitButton, 'Finalizar Questionário');
+    }
+}
+
+// ========================================
+// 4. GERAR DESCRIÇÃO COMPLETA
+// ========================================
+
+function generateFullDescription(analysis) {
+    const primary = analysis.primaryProfile;
+    const secondary = analysis.secondaryProfile;
+    
+    let description = `${primary.emoji} **${primary.name}**\n\n`;
+    
+    if (analysis.isHybrid && secondary) {
+        description += `Você apresenta um perfil híbrido, combinando características de **${primary.name}** (${primary.matchScore}%) e **${secondary.name}** (${secondary.matchScore}%).\n\n`;
+    } else {
+        description += `Você se destaca como **${primary.name}** com ${primary.matchScore}% de compatibilidade.\n\n`;
+    }
+    
+    description += `**Características Principais:**\n`;
+    primary.characteristics.forEach(char => {
+        description += `• ${char}\n`;
+    });
+    
+    description += `\n**Suas Forças:**\n`;
+    primary.strengths.forEach(strength => {
+        description += `✓ ${strength}\n`;
+    });
+    
+    return description;
+}
+
+// ========================================
+// 5. EXIBIR RESULTADOS AVANÇADOS
+// ========================================
+
+function displayAdvancedResults(name, analysis) {
+    const statusMessage = document.getElementById('statusMessage');
+    statusMessage.classList.remove('hidden');
+    statusMessage.classList.add('bg-gradient-to-br', 'from-blue-50', 'to-purple-50');
+    
+    const primary = analysis.primaryProfile;
+    const secondary = analysis.secondaryProfile;
+    
+    let htmlContent = `
+        <div class="space-y-6 p-6">
+            <!-- Cabeçalho -->
+            <div class="text-center">
+                <div class="text-6xl mb-4">${primary.emoji}</div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">${primary.name}</h2>
+                <div class="flex items-center justify-center gap-2 mb-4 flex-wrap">
+                    <span class="px-4 py-1 rounded-full text-sm font-semibold" 
+                          style="background-color: ${primary.primaryColor}20; color: ${primary.primaryColor}">
+                        ${primary.matchScore}% de compatibilidade
+                    </span>
+                    <span class="px-4 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700">
+                        Confiança: ${getConfidenceText(primary.confidence)}
+                    </span>
+                </div>
+                ${analysis.isHybrid && secondary ? `
+                    <p class="text-gray-600">
+                        Perfil Híbrido: Também possui características de 
+                        <strong>${secondary.name}</strong> (${secondary.matchScore}%)
+                    </p>
+                ` : ''}
+            </div>
+
+            <!-- Características -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>🎯</span> Características Principais
+                </h3>
+                <ul class="space-y-2">
+                    ${primary.characteristics.map(char => `
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-500 mt-1">•</span>
+                            <span class="text-gray-700">${char}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+
+            <!-- Forças e Desafios -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-green-800 flex items-center gap-2">
+                        <span>💪</span> Suas Forças
+                    </h3>
+                    <ul class="space-y-2">
+                        ${primary.strengths.map(strength => `
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-600">✓</span>
+                                <span class="text-gray-700 text-sm">${strength}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-yellow-800 flex items-center gap-2">
+                        <span>⚠️</span> Pontos de Atenção
+                    </h3>
+                    <ul class="space-y-2">
+                        ${primary.challenges.map(challenge => `
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-600">!</span>
+                                <span class="text-gray-700 text-sm">${challenge}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Dimensões de Perfil -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span>📊</span> Suas Dimensões de Perfil
+                </h3>
+                <div class="space-y-3">
+                    ${renderDimensionBars(analysis.dimensionScores)}
+                </div>
+            </div>
+
+            <!-- Soft Skills -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>⭐</span> Suas Principais Soft Skills
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    ${analysis.softSkills.map(skill => `
+                        <div class="border-l-4 border-blue-500 pl-3 py-2">
+                            <div class="font-semibold text-gray-800">${skill.name}</div>
+                            <div class="text-sm text-gray-600">${skill.description}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Análise Comportamental -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>🧠</span> Análise Comportamental
+                </h3>
+                <div class="space-y-3">
+                    ${renderBehavioralAnalysis(analysis.behavioralAnalysis)}
+                </div>
+            </div>
+
+            <!-- Fit Cultural -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>🏢</span> Compatibilidade Cultural
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Tipos de empresa ideais para você:</p>
+                <div class="space-y-2">
+                    ${analysis.culturalFit.map(culture => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">${culture.name}</div>
+                                <div class="text-sm text-gray-600">${culture.description}</div>
+                            </div>
+                            <div class="text-2xl font-bold ml-4" style="color: ${getCultureColor(culture.fit)}">
+                                ${culture.fit}%
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Cargos Ideais -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>🎯</span> Cargos Ideais para Você
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    ${primary.idealRoles.map(role => `
+                        <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            ${role}
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Ambiente de Trabalho -->
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <span>🌟</span> Ambiente de Trabalho
+                </h3>
+                <div class="space-y-2">
+                    <div class="flex items-start gap-2">
+                        <span class="text-green-600 font-bold">✓ Ideal:</span>
+                        <span class="text-gray-700">${primary.workEnvironment.best}</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-red-600 font-bold">✗ Evite:</span>
+                        <span class="text-gray-700">${primary.workEnvironment.avoid}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Áreas de Desenvolvimento -->
+            ${analysis.developmentAreas.length > 0 ? `
+                <div class="bg-orange-50 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-orange-800 flex items-center gap-2">
+                        <span>📈</span> Oportunidades de Desenvolvimento
+                    </h3>
+                    <div class="space-y-4">
+                        ${analysis.developmentAreas.map(area => `
+                            <div>
+                                <div class="font-semibold text-gray-800 mb-1">
+                                    ${area.dimension} (${Math.round(area.currentLevel)}%)
+                                </div>
+                                <ul class="ml-4 space-y-1">
+                                    ${area.suggestions.map(suggestion => `
+                                        <li class="text-sm text-gray-700">• ${suggestion}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- Recomendações -->
+            <div class="bg-purple-50 rounded-lg p-4">
+                <h3 class="font-bold text-lg mb-3 text-purple-800 flex items-center gap-2">
+                    <span>💡</span> Próximos Passos Recomendados
+                </h3>
+                <ul class="space-y-2">
+                    ${analysis.recommendations.nextSteps.map(step => `
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-600">→</span>
+                            <span class="text-gray-700">${step}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                <button onclick="downloadAdvancedPDF('${name.replace(/'/g, "\\'")}', this.dataset.analysis)" 
+                        data-analysis='${JSON.stringify(analysis).replace(/'/g, "\\'")}'
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <span>📄</span> Baixar Relatório Completo (PDF)
+                </button>
+                <button onclick="shareResults()" 
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <span>📤</span> Compartilhar Resultados
+                </button>
+            </div>
+            
+            <button onclick="resetQuestionnaire()" 
+                    class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                ${isRecruiterProfile ? '← Voltar ao Dashboard' : '← Fazer Novo Teste'}
+            </button>
+        </div>
+    `;
+    
+    statusMessage.innerHTML = htmlContent;
+}
+
+// ========================================
+// 6. FUNÇÕES AUXILIARES DE RENDERIZAÇÃO
+// ========================================
+
+function renderDimensionBars(scores) {
+    const dimensions = [
+        { key: 'innovation', name: 'Inovação', icon: '💡' },
+        { key: 'execution', name: 'Execução', icon: '⚡' },
+        { key: 'leadership', name: 'Liderança', icon: '👑' },
+        { key: 'collaboration', name: 'Colaboração', icon: '🤝' },
+        { key: 'adaptability', name: 'Adaptabilidade', icon: '🔄' },
+        { key: 'analytical', name: 'Pensamento Analítico', icon: '🔍' },
+        { key: 'autonomy', name: 'Autonomia', icon: '🎯' },
+        { key: 'structure', name: 'Estruturação', icon: '📋' }
+    ];
+    
+    return dimensions.map(dim => {
+        const score = Math.round(scores[dim.key] || 50);
+        const color = getScoreColor(score);
+        
+        return `
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-gray-700">
+                        ${dim.icon} ${dim.name}
+                    </span>
+                    <span class="text-sm font-bold" style="color: ${color}">
+                        ${score}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="h-3 rounded-full transition-all duration-500" 
+                         style="width: ${score}%; background-color: ${color}">
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderBehavioralAnalysis(analysis) {
+    const aspects = [
+        { key: 'workStyle', name: 'Estilo de Trabalho', icon: '💼' },
+        { key: 'decisionMaking', name: 'Tomada de Decisão', icon: '🤔' },
+        { key: 'teamDynamics', name: 'Dinâmica de Equipe', icon: '👥' },
+        { key: 'stressResponse', name: 'Resposta ao Estresse', icon: '😌' },
+        { key: 'learningStyle', name: 'Estilo de Aprendizagem', icon: '📚' }
+    ];
+    
+    return aspects.map(aspect => `
+        <div class="border-l-4 border-purple-400 pl-3 py-2">
+            <div class="font-semibold text-gray-800 mb-1">
+                ${aspect.icon} ${aspect.name}
+            </div>
+            <div class="text-sm text-gray-600">
+                ${analysis[aspect.key]}
+            </div>
+        </div>
+    `).join('');
+}
+
+function getConfidenceText(confidence) {
+    const texts = {
+        'muito-alta': '⭐⭐⭐⭐⭐ Muito Alta',
+        'alta': '⭐⭐⭐⭐ Alta',
+        'média': '⭐⭐⭐ Média',
+        'baixa': '⭐⭐ Baixa'
+    };
+    return texts[confidence] || 'Média';
+}
+
+function getScoreColor(score) {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#3b82f6';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+}
+
+function getCultureColor(fit) {
+    if (fit >= 80) return '#10b981';
+    if (fit >= 60) return '#3b82f6';
+    if (fit >= 40) return '#f59e0b';
+    return '#6b7280';
+}
+
+// ========================================
+// 7. FUNÇÕES AUXILIARES
+// ========================================
+
+function disableButton(button, text) {
+    button.disabled = true;
+    button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    button.classList.add('bg-gray-400', 'cursor-not-allowed');
+    button.textContent = text;
+}
+
+function enableButton(button, text) {
+    button.disabled = false;
+    button.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    button.textContent = text;
+}
+
+function showNotification(message, type = 'info') {
+    alert(message);
+}
+
+// ========================================
+// 8. DOWNLOAD PDF AVANÇADO
+// ========================================
+
+window.downloadAdvancedPDF = function(name, analysisData) {
+    const analysis = typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData;
+    const element = document.createElement('div');
+    element.style.padding = '40px';
+    element.style.fontFamily = 'Arial, sans-serif';
+    element.style.backgroundColor = '#ffffff';
+    
+    const primary = analysis.primaryProfile;
+    
+    element.innerHTML = `
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1e40af; font-size: 32px; margin-bottom: 10px;">Conecta RH</h1>
+            <h2 style="color: #4b5563; font-size: 24px;">Relatório Completo de Perfil Profissional</h2>
+            <div style="font-size: 48px; margin: 20px 0;">${primary.emoji}</div>
+        </div>
+        
+        <hr style="margin: 30px 0; border: 1px solid #e5e7eb;">
+        
+        <h3 style="color: #1f2937; font-size: 20px; margin-top: 30px;">Dados do Candidato</h3>
+        <p><strong>Nome:</strong> ${name}</p>
+        <p><strong>Data da Análise:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+        
+        <h3 style="color: ${primary.primaryColor}; font-size: 24px; margin-top: 30px;">
+            ${primary.name}
+        </h3>
+        <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
+            Compatibilidade: <strong>${primary.matchScore}%</strong> | 
+            Confiança: <strong>${getConfidenceText(primary.confidence)}</strong>
+        </p>
+        
+        <h4 style="color: #1f2937; margin-top: 20px;">Características Principais:</h4>
+        <ul style="line-height: 1.8;">
+            ${primary.characteristics.map(char => `<li>${char}</li>`).join('')}
+        </ul>
+        
+        <h4 style="color: #10b981; margin-top: 20px;">Forças:</h4>
+        <ul style="line-height: 1.8;">
+            ${primary.strengths.map(strength => `<li>${strength}</li>`).join('')}
+        </ul>
+        
+        <h4 style="color: #f59e0b; margin-top: 20px;">Pontos de Atenção:</h4>
+        <ul style="line-height: 1.8;">
+            ${primary.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
+        </ul>
+        
+        <h3 style="color: #1f2937; margin-top: 30px;">Cargos Ideais:</h3>
+        <p>${primary.idealRoles.join(', ')}</p>
+        
+        <h3 style="color: #1f2937; margin-top: 30px;">Ambiente de Trabalho:</h3>
+        <p><strong>Ideal:</strong> ${primary.workEnvironment.best}</p>
+        <p><strong>Evite:</strong> ${primary.workEnvironment.avoid}</p>
+        
+        <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
+        <p style="text-align: center; color: #6b7280; font-size: 12px;">
+            © ${new Date().getFullYear()} Conecta RH - Todos os direitos reservados
+        </p>
+    `;
+    
+    const opt = {
+        margin: 15,
+        filename: `ConectaRH_Perfil_Completo_${name.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+}
+
+// ========================================
+// 9. COMPARTILHAR RESULTADOS
+// ========================================
+
+window.shareResults = function() {
+    const shareData = {
+        title: 'Meu Perfil Profissional - Conecta RH',
+        text: 'Acabei de descobrir meu perfil profissional! Faça você também.',
+        url: window.location.href
+    };
+    
+    if (navigator.share) {
+        navigator.share(shareData).catch(err => console.log('Erro ao compartilhar'));
+    } else {
+        // Fallback: copiar link
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copiado para a área de transferência!');
+        });
+    }
+}
