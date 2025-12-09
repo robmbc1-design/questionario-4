@@ -1,14 +1,33 @@
 [build]
-  # Não precisa de build step, só instala dependências
+  # Diretório público onde está o site
+  publish = "public"
+  # Diretório das functions
+  functions = "netlify/functions"
+  # Comando de build (só instala dependências)
   command = "npm install"
-  publish = "."
 
-  # Forçar Node 18 (necessário para supabase-js v2+)
-  environment = { NODE_VERSION = "18" }
+[build.environment]
+  # Forçar Node 18
+  NODE_VERSION = "18"
 
 [functions]
   # Usa esbuild para empacotar as funções
   node_bundler = "esbuild"
-
+  # Diretório das functions
+  directory = "netlify/functions"
   # Mantém as libs externas
-  external_node_modules = ["@supabase/supabase-js", "bcryptjs"]
+  external_node_modules = ["@supabase/supabase-js", "bcryptjs", "jsonwebtoken", "resend"]
+
+[[redirects]]
+  # Redireciona chamadas de API para as functions
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[headers]]
+  # Headers de segurança
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
