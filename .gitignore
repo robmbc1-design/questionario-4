@@ -1,0 +1,21 @@
+# Variáveis de ambiente - NUNCA COMMITAR!
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Netlify
+.netlify/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.swp
+
+# Editores
+.vscode/
+.idea/
