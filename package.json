@@ -1,15 +1,19 @@
 {
-  "name": "questionario-netlify-functions",
+  "name": "conecta-rh",
   "version": "1.0.0",
-  "description": "Netlify Functions for the Supabase questionnaire.",
-  "main": "index.js",
+  "description": "Plataforma de análise de perfil profissional",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "netlify dev",
+    "build": "echo 'No build step'",
+    "deploy": "netlify deploy --prod"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@supabase/supabase-js": "^2.0.0",
-    "bcryptjs": "^2.4.3"
+    "@supabase/supabase-js": "^2.39.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "resend": "^3.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
   }
 }
