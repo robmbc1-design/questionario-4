@@ -37,7 +37,7 @@ exports.handler = async (event) => {
     }
 
     const { data: result, error } = await supabase
-      .from('candidate_results')
+      .from('questionario_resultados')
       .insert([{
         name: data.name,
         email: data.email,
@@ -86,6 +86,7 @@ exports.handler = async (event) => {
     };
   }
 };
+
 
 
 
