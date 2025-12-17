@@ -1623,3 +1623,106 @@ window.shareResults = function() {
         });
     }
 }
+// ========================================
+// GERENCIAMENTO DE USUÁRIOS
+// ========================================
+
+window.showUserManagement = async function() {
+    showScreen('userManagementScreen');
+    await loadRecruiters();
+}
+
+window.loadRecruiters = async function() {
+    const container = document.getElementById('recruitersList');
+    container.innerHTML = '<p class="text-center text-gray-500">Carregando...</p>';
+
+    try {
+        const response = await fetch('/.netlify/functions/listRecruiters');
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        const recruiters = data.recruiters || [];
+
+        if (recruiters.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500">Nenhum recrutador cadastrado.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        recruiters.forEach(recruiter => {
+            const card = document.createElement('div');
+            card.className = 'border-b py-4 flex justify-between items-center';
+            card.innerHTML = `
+                <div>
+                    <p class="font-bold text-gray-800">${recruiter.name}</p>
+                    <p class="text-sm text-gray-600">${recruiter.email}</p>
+                    ${recruiter.company ? `<p class="text-xs text-gray-500">${recruiter.company}</p>` : ''}
+                </div>
+                <button onclick="deleteRecruiter('${recruiter.id}')" 
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                    🗑️ Deletar
+                </button>
+            `;
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+        container.innerHTML = `<p class="text-center text-red-500">Erro: ${error.message}</p>`;
+    }
+}
+
+document.getElementById('newRecruiterForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Criando...';
+
+    try {
+        const response = await fetch('/.netlify/functions/createRecruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('newRecruiterName').value,
+                email: document.getElementById('newRecruiterEmail').value,
+                password: document.getElementById('newRecruiterPassword').value,
+                company: document.getElementById('newRecruiterCompany').value
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        alert('✅ Recrutador criado com sucesso!');
+        e.target.reset();
+        await loadRecruiters();
+
+    } catch (error) {
+        alert('❌ Erro: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Criar Recrutador';
+    }
+});
+
+window.deleteRecruiter = async function(id) {
+    if (!confirm('Tem certeza que deseja deletar este recrutador?')) return;
+
+    try {
+        const response = await fetch(`/.netlify/functions/deleteRecruiter?id=${id}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        alert('✅ Recrutador deletado com sucesso!');
+        await loadRecruiters();
+
+    } catch (error) {
+        alert('❌ Erro: ' + error.message);
+    }
+}
