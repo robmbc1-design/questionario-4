@@ -24,7 +24,7 @@ exports.handler = async (event) => {
       .order('created_at', { ascending: false });
 
     const { data: employerResults, error: employerError } = await supabase
-      .from('employer_results')
+      .from('questionario_resultados')
       .select('*')
       .order('created_at', { ascending: false });
 
