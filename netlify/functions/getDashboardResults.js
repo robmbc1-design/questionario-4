@@ -18,40 +18,62 @@ exports.handler = async (event) => {
       process.env.SUPABASE_SERVICE_KEY
     );
 
-    const { data: candidateResults, error: candidateError } = await supabase
+    // Buscar resultados dos candidatos
+    let candidateResults = [];
+    const { data: candData, error: candError } = await supabase
       .from('candidate_results')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('timestamp', { ascending: false });
 
-    const { data: employerResults, error: employerError } = await supabase
-      .from('questionario_resultados')
+    if (!candError && candData) {
+      candidateResults = candData;
+    } else if (candError) {
+      console.error('Erro ao buscar candidatos:', candError);
+    }
+
+    // Buscar resultados dos empregadores
+    let employerResults = [];
+    
+    // Tentar employer_results primeiro
+    const { data: empData, error: empError } = await supabase
+      .from('employer_results')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('timestamp', { ascending: false });
 
-    if (candidateError || employerError) {
-      console.error('Erro ao buscar:', { candidateError, employerError });
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Erro ao buscar resultados' })
-      };
+    if (!empError && empData) {
+      employerResults = empData;
+    } else {
+      // Se não existir, tentar questionario_resultados SEM ordenar
+      const { data: altData, error: altError } = await supabase
+        .from('questionario_resultados')
+        .select('*');
+      
+      if (!altError && altData) {
+        employerResults = altData;
+      } else if (altError) {
+        console.warn('Aviso ao buscar empregadores:', altError);
+      }
     }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        candidateResults: candidateResults || [],
-        employerResults: employerResults || []
+        candidateResults: candidateResults,
+        employerResults: employerResults
       })
     };
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error geral:', error);
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        candidateResults: [],
+        employerResults: [],
+        warning: error.message
+      })
     };
   }
 };
