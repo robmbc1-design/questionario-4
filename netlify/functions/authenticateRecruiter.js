@@ -23,7 +23,6 @@ exports.handler = async (event) => {
   }
 
   try {
-    // ✅ Criar cliente DENTRO da função
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY
@@ -41,12 +40,11 @@ exports.handler = async (event) => {
 
     console.log('Tentando login com:', username);
 
-    // Buscar recrutador
+    // Buscar recrutador (SEM verificar is_active)
     const { data: recruiter, error } = await supabase
       .from('recruiters')
       .select('*')
       .eq('email', username)
-      .eq('is_active', true)
       .single();
 
     if (error) {
@@ -80,11 +78,16 @@ exports.handler = async (event) => {
       };
     }
 
-    // Atualizar último login
-    await supabase
-      .from('recruiters')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', recruiter.id);
+    // Tentar atualizar último login (se a coluna existir)
+    try {
+      await supabase
+        .from('recruiters')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', recruiter.id);
+    } catch (updateError) {
+      console.log('Não foi possível atualizar last_login:', updateError);
+      // Continua mesmo se falhar
+    }
 
     // Gerar JWT token
     const token = jwt.sign(
