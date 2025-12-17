@@ -92,15 +92,4 @@ exports.handler = async (event) => {
       })
     };
   }
-};
-```
-
-**Commit e aguarde o deploy**
-
----
-
-### **PASSO 4: Executar o Setup**
-
-Acesse esta URL no navegador:
-```
-https://seu-site.netlify.app/.netlify/functions/setupRecruiter?key=setup-conectarh-2024
+}
