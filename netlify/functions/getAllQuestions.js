@@ -31,7 +31,7 @@ exports.handler = async (event) => {
     );
 
     const { data: questions, error } = await supabase
-      .from('questions')
+      .from('question_bank')
       .select('*')
       .order('created_at', { ascending: false });
 
