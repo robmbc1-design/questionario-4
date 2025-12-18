@@ -21,7 +21,7 @@ exports.handler = async (event) => {
     const questionData = JSON.parse(event.body);
 
     const { data, error } = await supabase
-      .from('questions')
+      .from('question_bank')
       .insert([{
         question_text: questionData.question_text,
         left_label: questionData.left_label,
