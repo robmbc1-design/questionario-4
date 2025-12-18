@@ -1,53 +1,58 @@
-/ ========================================
-// addQuestion.js
-// netlify/functions/addQuestion.js
-// ========================================
-
-const { createClient: createClient2 } = require('@supabase/supabase-js');
-
-const supabaseUrl2 = process.env.SUPABASE_URL;
-const supabaseServiceKey2 = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase2 = createClient2(supabaseUrl2, supabaseServiceKey2);
+const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY
+    );
+
+    const questionData = JSON.parse(event.body);
+
+    const { data, error } = await supabase
+      .from('questions')
+      .insert([{
+        question_text: questionData.question_text,
+        left_label: questionData.left_label,
+        right_label: questionData.right_label,
+        category: questionData.category,
+        weight: questionData.weight || 1,
+        difficulty: questionData.difficulty || 'medium',
+        mapping: questionData.mapping || 'innovationVsExecution',
+        active: true
+      }])
+      .select();
+
+    if (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: error.message })
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ success: true, data: data })
     };
 
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    try {
-        const data = JSON.parse(event.body);
-
-        const { error } = await supabase2
-            .from('question_bank')
-            .insert([{
-                question_text: data.question_text,
-                left_label: data.left_label,
-                right_label: data.right_label,
-                category: data.category,
-                weight: data.weight,
-                difficulty: data.difficulty,
-                active: true
-            }]);
-
-        if (error) throw error;
-
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ message: 'Pergunta adicionada com sucesso!' })
-        };
-    } catch (e) {
-        console.error("Erro:", e);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: e.message })
-        };
-    }
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: error.message })
+    };
+  }
 };
