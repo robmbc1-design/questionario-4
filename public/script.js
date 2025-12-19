@@ -26,7 +26,7 @@ const fallbackQuestions = [
 // ========================================
 
 window.showScreen = function(screenId) {
-    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'employerWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire', 'matchingScreen', 'adminQuestionsScreen'];
+    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'employerWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire', 'matchingScreen', 'adminQuestionsScreen','userManagementScreen'];
     screens.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.classList.add('hidden');
@@ -69,6 +69,11 @@ window.showMatchingScreen = function() {
 window.showAdminQuestions = function() {
     showScreen('adminQuestionsScreen');
     loadAdminQuestions();
+}
+
+window.showUserManagement = async function() {
+    showScreen('userManagementScreen');
+    await loadRecruiters();
 }
 
 // ========================================
@@ -589,7 +594,17 @@ window.loadMatchingData = async function() {
         const employers = allResults.employerResults || [];
 
         if (candidates.length === 0 || employers.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500">Dados insuficientes para matching. Precisa de pelo menos 1 colaborador e 1 empregador.</p>';
+            container.innerHTML = `
+                <div class="bg-yellow-50 p-6 rounded-lg text-center">
+                    <p class="text-gray-700">
+                        ${candidates.length === 0 ? '❌ Nenhum colaborador cadastrado.' : ''}
+                        ${employers.length === 0 ? '❌ Nenhum empregador cadastrado.' : ''}
+                    </p>
+                    <p class="text-gray-600 mt-2">
+                        Precisa de pelo menos 1 colaborador e 1 empregador para fazer matching.
+                    </p>
+                </div>
+            `;
             return;
         }
 
@@ -609,40 +624,60 @@ window.loadMatchingData = async function() {
         // Ordena por compatibilidade
         matches.sort((a, b) => b.score - a.score);
 
-        // Renderiza top 20
+        // Renderiza resultados
         container.innerHTML = '';
+        
+        if (matches.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500">Nenhum match encontrado.</p>';
+            return;
+        }
+
         matches.slice(0, 20).forEach(match => {
             const card = document.createElement('div');
-            card.className = 'bg-white p-6 rounded-lg shadow-sm border-l-4 ' + 
-                (match.score >= 80 ? 'border-green-500' : match.score >= 60 ? 'border-yellow-500' : 'border-red-500');
+            const scoreColor = match.score >= 80 ? 'green' : match.score >= 60 ? 'yellow' : 'red';
+            const borderColor = match.score >= 80 ? 'border-green-500' : match.score >= 60 ? 'border-yellow-500' : 'border-red-500';
             
+            card.className = `bg-white p-6 rounded-lg shadow-sm border-l-4 ${borderColor} mb-4`;
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <!-- Candidato -->
                     <div>
-                        <h3 class="font-bold text-lg">${match.candidate.name}</h3>
+                        <h3 class="font-bold text-lg text-gray-900">${match.candidate.name}</h3>
                         <p class="text-sm text-gray-600">${match.candidate.email}</p>
-                        <p class="text-blue-600 font-bold">${match.candidate.profile}</p>
+                        <p class="text-blue-600 font-semibold mt-1">${match.candidate.profile}</p>
                     </div>
+                    
+                    <!-- Score -->
                     <div class="text-center">
-                        <div class="text-3xl font-bold ${match.score >= 80 ? 'text-green-600' : match.score >= 60 ? 'text-yellow-600' : 'text-red-600'}">
+                        <div class="text-4xl font-bold text-${scoreColor}-600">
                             ${match.score}%
                         </div>
-                        <p class="text-xs text-gray-500">Compatibilidade</p>
+                        <p class="text-xs text-gray-500 mt-1">Compatibilidade</p>
                     </div>
+                    
+                    <!-- Empregador -->
                     <div class="text-right">
-                        <h3 class="font-bold text-lg">${match.employer.name}</h3>
+                        <h3 class="font-bold text-lg text-gray-900">${match.employer.name}</h3>
                         <p class="text-sm text-gray-600">${match.employer.email}</p>
-                        <p class="text-purple-600 font-bold">${match.employer.profile}</p>
+                        <p class="text-purple-600 font-semibold mt-1">${match.employer.profile}</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
+                
+                <!-- Detalhes -->
+                <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t text-sm">
                     <div>
-                        <p class="text-gray-600">Inovador: ${match.candidate.inovadorScore}</p>
-                        <p class="text-gray-600">Executor: ${match.candidate.executorScore}</p>
+                        <p class="text-gray-600">
+                            <strong>Candidato:</strong> 
+                            Inovador: ${match.candidate.inovadorScore || 0} | 
+                            Executor: ${match.candidate.executorScore || 0}
+                        </p>
                     </div>
                     <div class="text-right">
-                        <p class="text-gray-600">Busca Inovador: ${match.employer.inovadorScore}</p>
-                        <p class="text-gray-600">Busca Executor: ${match.employer.executorScore}</p>
+                        <p class="text-gray-600">
+                            <strong>Busca:</strong> 
+                            Inovador: ${match.employer.inovadorScore || 0} | 
+                            Executor: ${match.employer.executorScore || 0}
+                        </p>
                     </div>
                 </div>
             `;
@@ -650,18 +685,25 @@ window.loadMatchingData = async function() {
         });
 
     } catch (e) {
-        console.error("Erro:", e);
-        container.innerHTML = '<p class="text-center text-red-500">Erro ao carregar dados de matching.</p>';
+        console.error("Erro no matching:", e);
+        container.innerHTML = `
+            <div class="bg-red-50 p-6 rounded-lg text-center">
+                <p class="text-red-600">Erro ao carregar dados de matching.</p>
+                <p class="text-sm text-gray-600 mt-2">${e.message}</p>
+            </div>
+        `;
     }
 }
 
 function calculateCompatibility(candidate, employer) {
-    // Normaliza scores (0-100)
-    const candidateInovador = (candidate.inovadorScore / 50) * 100; // Assumindo max 50
-    const candidateExecutor = (candidate.executorScore / 50) * 100;
+    // Normaliza scores
+    const maxScore = 100;
     
-    const employerInovador = (employer.inovadorScore / 50) * 100;
-    const employerExecutor = (employer.executorScore / 50) * 100;
+    const candidateInovador = Math.min(100, (candidate.inovadorScore || 0) / 50 * 100);
+    const candidateExecutor = Math.min(100, (candidate.executorScore || 0) / 50 * 100);
+    
+    const employerInovador = Math.min(100, (employer.inovadorScore || 0) / 50 * 100);
+    const employerExecutor = Math.min(100, (employer.executorScore || 0) / 50 * 100);
     
     // Calcula diferença (quanto menor, melhor)
     const diffInovador = Math.abs(candidateInovador - employerInovador);
@@ -672,7 +714,6 @@ function calculateCompatibility(candidate, employer) {
     
     return Math.max(0, Math.min(100, Math.round(compatibility)));
 }
-
 // ========================================
 // ADMIN DE PERGUNTAS
 // ========================================
@@ -815,6 +856,46 @@ window.deleteQuestion = async function(id) {
         console.error("Erro:", e);
         alert('Erro ao deletar pergunta');
     }
+window.editQuestion = async function(id) {
+    try {
+        // Buscar a pergunta
+        const response = await fetch('/.netlify/functions/getAllQuestions');
+        const data = await response.json();
+        const question = data.questions.find(q => q.id === id);
+        
+        if (!question) {
+            alert('Pergunta não encontrada!');
+            return;
+        }
+
+        // Preencher o modal
+        currentEditingQuestionId = id;
+        document.getElementById('modalTitle').textContent = 'Editar Pergunta';
+        document.getElementById('modalQuestionText').value = question.question_text || question.text;
+        document.getElementById('modalLeftLabel').value = question.left_label || question.leftLabel;
+        document.getElementById('modalRightLabel').value = question.right_label || question.rightLabel;
+        document.getElementById('modalCategory').value = question.category || 'geral';
+        document.getElementById('modalWeight').value = question.weight || 1;
+        document.getElementById('modalDifficulty').value = question.difficulty || 'medium';
+        
+        // Mostrar modal
+        document.getElementById('questionModal').style.display = 'flex';
+
+    } catch (error) {
+        alert('Erro ao carregar pergunta: ' + error.message);
+    }
+}
+
+window.showAddQuestionModal = function() {
+    currentEditingQuestionId = null;
+    document.getElementById('modalTitle').textContent = 'Nova Pergunta';
+    document.getElementById('questionForm').reset();
+    document.getElementById('questionModal').style.display = 'flex';
+}
+
+window.closeQuestionModal = function() {
+    document.getElementById('questionModal').style.display = 'none';
+    currentEditingQuestionId = null;
 }
 
 // ========================================
@@ -1726,3 +1807,4 @@ window.deleteRecruiter = async function(id) {
         alert('❌ Erro: ' + error.message);
     }
 }
+
