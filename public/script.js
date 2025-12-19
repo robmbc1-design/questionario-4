@@ -1835,4 +1835,12 @@ window.deleteRecruiter = async function(id) {
 }
 
 
+// ========================================
+// INICIALIZAÇÃO
+// ========================================
+
+// Garantir que a tela inicial está visível ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+    showScreen('roleSelectionScreen');
+});
 
