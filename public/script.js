@@ -29,10 +29,15 @@ window.showScreen = function(screenId) {
     const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'employerWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire', 'matchingScreen', 'adminQuestionsScreen','userManagementScreen'];
     screens.forEach(id => {
         const element = document.getElementById(id);
-        if (element) element.classList.add('hidden');
+        if (element) {
+            element.classList.add('hidden');
+        }
     });
+    
     const targetElement = document.getElementById(screenId);
-    if (targetElement) targetElement.classList.remove('hidden');
+    if (targetElement) {
+        targetElement.classList.remove('hidden');
+    }
 };
 
 window.showRoleSelection = function() {
@@ -1828,5 +1833,6 @@ window.deleteRecruiter = async function(id) {
         alert('❌ Erro: ' + error.message);
     }
 }
+
 
 
