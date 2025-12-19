@@ -7,20 +7,6 @@ let isRecruiterProfile = false;
 let currentQuestions = [];
 let currentEditingQuestionId = null;
 
-// ✅ PERGUNTAS FIXAS COMO FALLBACK
-const fallbackQuestions = [
-    { id: 'fb-1', text: 'Ao iniciar um novo projeto, você prefere ter autonomia para planejar e executar, ou seguir um plano já detalhado?', leftLabel: 'Prefiro seguir um plano', rightLabel: 'Prefiro ter autonomia', category: 'inovador', weight: 2 },
-    { id: 'fb-2', text: 'Em um ambiente de trabalho de alta pressão, como você se adapta?', leftLabel: 'Sigo os processos já estabelecidos', rightLabel: 'Busco novas soluções', category: 'inovador', weight: 2 },
-    { id: 'fb-3', text: 'Em relação à sua função, qual a sua motivação principal?', leftLabel: 'Garantir execução consistente', rightLabel: 'Explorar novas tecnologias', category: 'inovador', weight: 2 },
-    { id: 'fb-4', text: 'Ao se deparar com um obstáculo, você prefere:', leftLabel: 'Pedir ajuda de um supervisor', rightLabel: 'Buscar solução por conta própria', category: 'executor', weight: 2 },
-    { id: 'fb-5', text: 'Quando você contribui em um projeto, você foca em:', leftLabel: 'Execução impecável de cada etapa', rightLabel: 'Definir estratégia e direção', category: 'executor', weight: 2 },
-    { id: 'fb-6', text: 'Em um ambiente de inovação, você se sente mais confortável em:', leftLabel: 'Apoiar a execução de ideias', rightLabel: 'Propor ativamente novas ideias', category: 'inovador', weight: 2 },
-    { id: 'fb-7', text: 'Sua relação com a rotina no trabalho:', leftLabel: 'Me sinto seguro com rotina', rightLabel: 'Preciso de desafios constantes', category: 'especialista', weight: 1 },
-    { id: 'fb-8', text: 'Em reuniões de equipe, você se vê mais como:', leftLabel: 'Um ouvinte que contribui quando necessário', rightLabel: 'Um participante ativo com ideias', category: 'inovador', weight: 2 },
-    { id: 'fb-9', text: 'O que mais o motiva em um projeto?', leftLabel: 'Resolver problemas complexos', rightLabel: 'Ser reconhecido pela eficiência', category: 'inovador', weight: 1 },
-    { id: 'fb-10', text: 'Ao receber uma tarefa nova, sua expectativa é:', leftLabel: 'A empresa deve fornecer treinamento', rightLabel: 'É minha responsabilidade buscar conhecimento', category: 'inovador', weight: 2 }
-];
-
 // ========================================
 // NAVEGAÇÃO
 // ========================================
@@ -190,6 +176,20 @@ async function renderQuestions(questions) {
         container.appendChild(questionCard);
     });
 }
+
+// ✅ PERGUNTAS FIXAS COMO FALLBACK
+const fallbackQuestions = [
+    { id: 'fb-1', text: 'Ao iniciar um novo projeto, você prefere ter autonomia para planejar e executar, ou seguir um plano já detalhado?', leftLabel: 'Prefiro seguir um plano', rightLabel: 'Prefiro ter autonomia', category: 'inovador', weight: 2 },
+    { id: 'fb-2', text: 'Em um ambiente de trabalho de alta pressão, como você se adapta?', leftLabel: 'Sigo os processos já estabelecidos', rightLabel: 'Busco novas soluções', category: 'inovador', weight: 2 },
+    { id: 'fb-3', text: 'Em relação à sua função, qual a sua motivação principal?', leftLabel: 'Garantir execução consistente', rightLabel: 'Explorar novas tecnologias', category: 'inovador', weight: 2 },
+    { id: 'fb-4', text: 'Ao se deparar com um obstáculo, você prefere:', leftLabel: 'Pedir ajuda de um supervisor', rightLabel: 'Buscar solução por conta própria', category: 'executor', weight: 2 },
+    { id: 'fb-5', text: 'Quando você contribui em um projeto, você foca em:', leftLabel: 'Execução impecável de cada etapa', rightLabel: 'Definir estratégia e direção', category: 'executor', weight: 2 },
+    { id: 'fb-6', text: 'Em um ambiente de inovação, você se sente mais confortável em:', leftLabel: 'Apoiar a execução de ideias', rightLabel: 'Propor ativamente novas ideias', category: 'inovador', weight: 2 },
+    { id: 'fb-7', text: 'Sua relação com a rotina no trabalho:', leftLabel: 'Me sinto seguro com rotina', rightLabel: 'Preciso de desafios constantes', category: 'especialista', weight: 1 },
+    { id: 'fb-8', text: 'Em reuniões de equipe, você se vê mais como:', leftLabel: 'Um ouvinte que contribui quando necessário', rightLabel: 'Um participante ativo com ideias', category: 'inovador', weight: 2 },
+    { id: 'fb-9', text: 'O que mais o motiva em um projeto?', leftLabel: 'Resolver problemas complexos', rightLabel: 'Ser reconhecido pela eficiência', category: 'inovador', weight: 1 },
+    { id: 'fb-10', text: 'Ao receber uma tarefa nova, sua expectativa é:', leftLabel: 'A empresa deve fornecer treinamento', rightLabel: 'É minha responsabilidade buscar conhecimento', category: 'inovador', weight: 2 }
+];
 
 // ========================================
 // SUBMISSÃO DE RESULTADOS
@@ -1843,4 +1843,5 @@ window.deleteRecruiter = async function(id) {
 document.addEventListener('DOMContentLoaded', function() {
     showScreen('roleSelectionScreen');
 });
+
 
