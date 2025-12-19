@@ -791,19 +791,25 @@ window.closeQuestionModal = function() {
     document.getElementById('questionModal').style.display = 'none';
 }
 
-document.getElementById('questionForm').addEventListener('submit', async function(e) {
+const questionFormHandler = async function(e) {
     e.preventDefault();
     
-    const questionData = {
-        question_text: document.getElementById('modalQuestionText').value,
-        left_label: document.getElementById('modalLeftLabel').value,
-        right_label: document.getElementById('modalRightLabel').value,
-        category: document.getElementById('modalCategory').value,
-        weight: parseInt(document.getElementById('modalWeight').value),
-        difficulty: document.getElementById('modalDifficulty').value
-    };
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Salvando...';
 
     try {
+        const questionData = {
+            question_text: document.getElementById('modalQuestionText').value,
+            left_label: document.getElementById('modalLeftLabel').value,
+            right_label: document.getElementById('modalRightLabel').value,
+            category: document.getElementById('modalCategory').value,
+            weight: parseInt(document.getElementById('modalWeight').value),
+            difficulty: document.getElementById('modalDifficulty').value,
+            mapping: 'innovationVsExecution'
+        };
+
         const url = currentEditingQuestionId 
             ? `/.netlify/functions/updateQuestion?id=${currentEditingQuestionId}`
             : '/.netlify/functions/addQuestion';
@@ -814,30 +820,45 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             body: JSON.stringify(questionData)
         });
 
-        if (!response.ok) throw new Error('Erro ao salvar pergunta');
+        const data = await response.json();
 
-        alert('Pergunta salva com sucesso!');
+        if (!response.ok) throw new Error(data.error || 'Erro ao salvar');
+
+        alert('✅ Pergunta salva com sucesso!');
         closeQuestionModal();
-        loadAdminQuestions();
+        await loadAdminQuestions();
 
-    } catch (e) {
-        console.error("Erro:", e);
-        alert('Erro ao salvar pergunta: ' + e.message);
+    } catch (error) {
+        alert('❌ Erro: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
+};
+
+// Aplicar o handler
+const questionForm = document.getElementById('questionForm');
+if (questionForm) {
+    questionForm.removeEventListener('submit', questionFormHandler); // Remove duplicados
+    questionForm.addEventListener('submit', questionFormHandler);
+    }
+
 });
 
 window.toggleQuestionStatus = async function(id, currentStatus) {
     try {
-        const response = await fetch(`/.netlify/functions/toggleQuestion?id=${id}&active=${!currentStatus}`, {
+        const newStatus = !currentStatus;
+        const response = await fetch(`/.netlify/functions/toggleQuestion?id=${id}&active=${newStatus}`, {
             method: 'POST'
         });
 
-        if (!response.ok) throw new Error('Erro ao alterar status');
+        const data = await response.json();
 
-        loadAdminQuestions();
-    } catch (e) {
-        console.error("Erro:", e);
-        alert('Erro ao alterar status da pergunta');
+        if (!response.ok) throw new Error(data.error || 'Erro ao alterar status');
+
+        await loadAdminQuestions();
+    } catch (error) {
+        alert('❌ Erro ao alterar status: ' + error.message);
     }
 }
 
@@ -1807,4 +1828,5 @@ window.deleteRecruiter = async function(id) {
         alert('❌ Erro: ' + error.message);
     }
 }
+
 
