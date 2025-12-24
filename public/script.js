@@ -1211,6 +1211,245 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ========================================
+// FUNÇÕES AUXILIARES ADICIONAIS
+// ========================================
+
+window.showModal = function(message) {
+    alert(message);
+}
+
+// Função para compartilhar resultados (caso seja implementada)
+window.shareResults = function() {
+    const shareData = {
+        title: 'Meu Perfil Profissional - Conecta RH',
+        text: 'Acabei de descobrir meu perfil profissional! Faça você também.',
+        url: window.location.href
+    };
+    
+    if (navigator.share) {
+        navigator.share(shareData).catch(err => console.log('Erro ao compartilhar'));
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copiado para a área de transferência!');
+        });
+    }
+}
+
+// ========================================
+// FUNÇÕES AVANÇADAS (SE PROFILEANALYZER DISPONÍVEL)
+// ========================================
+
+// Download PDF Avançado (usado quando ProfileAnalyzer está disponível)
+window.downloadAdvancedPDF = function(name, analysisData) {
+    try {
+        const analysis = typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData;
+        const element = document.createElement('div');
+        element.style.padding = '40px';
+        element.style.fontFamily = 'Arial, sans-serif';
+        element.style.backgroundColor = '#ffffff';
+        
+        const primary = analysis.primaryProfile;
+        
+        element.innerHTML = `
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #1e40af; font-size: 32px; margin-bottom: 10px;">Conecta RH</h1>
+                <h2 style="color: #4b5563; font-size: 24px;">Relatório Completo de Perfil Profissional</h2>
+                <div style="font-size: 48px; margin: 20px 0;">${primary.emoji}</div>
+            </div>
+            
+            <hr style="margin: 30px 0; border: 1px solid #e5e7eb;">
+            
+            <h3 style="color: #1f2937; font-size: 20px; margin-top: 30px;">Dados do Candidato</h3>
+            <p><strong>Nome:</strong> ${name}</p>
+            <p><strong>Data da Análise:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+            
+            <h3 style="color: ${primary.primaryColor || '#3b82f6'}; font-size: 24px; margin-top: 30px;">
+                ${primary.name}
+            </h3>
+            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
+                Compatibilidade: <strong>${primary.matchScore}%</strong>
+            </p>
+            
+            <h4 style="color: #1f2937; margin-top: 20px;">Características Principais:</h4>
+            <ul style="line-height: 1.8;">
+                ${primary.characteristics.map(char => `<li>${char}</li>`).join('')}
+            </ul>
+            
+            ${primary.strengths && primary.strengths.length > 0 ? `
+                <h4 style="color: #10b981; margin-top: 20px;">Forças:</h4>
+                <ul style="line-height: 1.8;">
+                    ${primary.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                </ul>
+            ` : ''}
+            
+            ${primary.challenges && primary.challenges.length > 0 ? `
+                <h4 style="color: #f59e0b; margin-top: 20px;">Pontos de Atenção:</h4>
+                <ul style="line-height: 1.8;">
+                    ${primary.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
+                </ul>
+            ` : ''}
+            
+            ${primary.idealRoles && primary.idealRoles.length > 0 ? `
+                <h3 style="color: #1f2937; margin-top: 30px;">Cargos Ideais:</h3>
+                <p>${primary.idealRoles.join(', ')}</p>
+            ` : ''}
+            
+            ${primary.workEnvironment ? `
+                <h3 style="color: #1f2937; margin-top: 30px;">Ambiente de Trabalho:</h3>
+                <p><strong>Ideal:</strong> ${primary.workEnvironment.best}</p>
+                <p><strong>Evite:</strong> ${primary.workEnvironment.avoid}</p>
+            ` : ''}
+            
+            <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
+            <p style="text-align: center; color: #6b7280; font-size: 12px;">
+                © ${new Date().getFullYear()} Conecta RH - Todos os direitos reservados
+            </p>
+        `;
+        
+        const opt = {
+            margin: 15,
+            filename: `ConectaRH_Perfil_Completo_${name.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(element).save();
+    } catch (error) {
+        console.error('Erro ao gerar PDF avançado:', error);
+        alert('Erro ao gerar PDF. Usando versão básica...');
+        // Fallback para PDF básico
+        downloadBasicPDF(name, 'Perfil Profissional', '📊');
+    }
+}
+
+// Renderização de barras de dimensões (usado com ProfileAnalyzer)
+function renderDimensionBars(scores) {
+    const dimensions = [
+        { key: 'innovation', name: 'Inovação', icon: '💡' },
+        { key: 'execution', name: 'Execução', icon: '⚡' },
+        { key: 'leadership', name: 'Liderança', icon: '👑' },
+        { key: 'collaboration', name: 'Colaboração', icon: '🤝' },
+        { key: 'adaptability', name: 'Adaptabilidade', icon: '🔄' },
+        { key: 'analytical', name: 'Pensamento Analítico', icon: '🔍' },
+        { key: 'autonomy', name: 'Autonomia', icon: '🎯' },
+        { key: 'structure', name: 'Estruturação', icon: '📋' }
+    ];
+    
+    return dimensions.map(dim => {
+        const score = Math.round(scores[dim.key] || 50);
+        const color = getScoreColor(score);
+        
+        return `
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-gray-700">
+                        ${dim.icon} ${dim.name}
+                    </span>
+                    <span class="text-sm font-bold" style="color: ${color}">
+                        ${score}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="h-3 rounded-full transition-all duration-500" 
+                         style="width: ${score}%; background-color: ${color}">
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Renderização de análise comportamental
+function renderBehavioralAnalysis(analysis) {
+    const aspects = [
+        { key: 'workStyle', name: 'Estilo de Trabalho', icon: '💼' },
+        { key: 'decisionMaking', name: 'Tomada de Decisão', icon: '🤔' },
+        { key: 'teamDynamics', name: 'Dinâmica de Equipe', icon: '👥' },
+        { key: 'stressResponse', name: 'Resposta ao Estresse', icon: '😌' },
+        { key: 'learningStyle', name: 'Estilo de Aprendizagem', icon: '📚' }
+    ];
+    
+    return aspects.map(aspect => {
+        if (!analysis[aspect.key]) return '';
+        return `
+            <div class="border-l-4 border-purple-400 pl-3 py-2">
+                <div class="font-semibold text-gray-800 mb-1">
+                    ${aspect.icon} ${aspect.name}
+                </div>
+                <div class="text-sm text-gray-600">
+                    ${analysis[aspect.key]}
+                </div>
+            </div>
+        `;
+    }).filter(Boolean).join('');
+}
+
+// Funções auxiliares de cores
+function getConfidenceText(confidence) {
+    const texts = {
+        'muito-alta': '⭐⭐⭐⭐⭐ Muito Alta',
+        'alta': '⭐⭐⭐⭐ Alta',
+        'média': '⭐⭐⭐ Média',
+        'media': '⭐⭐⭐ Média',
+        'baixa': '⭐⭐ Baixa'
+    };
+    return texts[confidence] || '⭐⭐⭐ Média';
+}
+
+function getScoreColor(score) {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#3b82f6';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+}
+
+function getCultureColor(fit) {
+    if (fit >= 80) return '#10b981';
+    if (fit >= 60) return '#3b82f6';
+    if (fit >= 40) return '#f59e0b';
+    return '#6b7280';
+}
+
+// ========================================
+// TRATAMENTO DE ERROS GLOBAL
+// ========================================
+
+window.addEventListener('error', function(event) {
+    console.error('Erro capturado:', event.error);
+    // Não exibir alert para não incomodar o usuário
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Promise rejeitada:', event.reason);
+    // Não exibir alert para não incomodar o usuário
+});
+
+// ========================================
+// LOG DE INICIALIZAÇÃO
+// ========================================
+
+console.log('✅ Conecta RH - Script carregado com sucesso!');
+console.log('📊 Versão: 2.0 - Sistema Completo');
+console.log('🔧 Funções disponíveis:', {
+    showCandidateWelcome: typeof window.showCandidateWelcome,
+    showEmployerWelcome: typeof window.showEmployerWelcome,
+    showRecruiterLogin: typeof window.showRecruiterLogin,
+    showRecruiterDashboard: typeof window.showRecruiterDashboard,
+    startQuestionnaire: typeof window.startQuestionnaire,
+    submitResults: typeof window.submitResults,
+    loginRecruiter: typeof window.loginRecruiter,
+    viewAllResults: typeof window.viewAllResults,
+    showMatchingScreen: typeof window.showMatchingScreen,
+    showAdminQuestions: typeof window.showAdminQuestions,
+    showUserManagement: typeof window.showUserManagement
+});
+
+// ========================================
+// FIM DO SCRIPT
+// ========================================
+
     results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     results.forEach(data => {
         const date = new Date(data.timestamp).toLocaleString('pt-BR');
