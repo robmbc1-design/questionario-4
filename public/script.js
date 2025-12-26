@@ -1,5 +1,6 @@
 // ========================================
-// CONECTA RH - SCRIPT COMPLETO CORRIGIDO
+// CONECTA RH - SCRIPT COMPLETO FINAL
+// Todas as funcionalidades integradas
 // ========================================
 
 let isRecruiterProfile = false;
@@ -7,22 +8,23 @@ let currentQuestions = [];
 let currentEditingQuestionId = null;
 
 // ========================================
-// NAVEGAÇÃO
+// FUNÇÕES DE NAVEGAÇÃO
 // ========================================
 
 window.showScreen = function(screenId) {
-    const screens = ['roleSelectionScreen', 'candidateWelcomeScreen', 'employerWelcomeScreen', 'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 'employerQuestionnaire', 'matchingScreen', 'adminQuestionsScreen','userManagementScreen'];
+    const screens = [
+        'roleSelectionScreen', 'candidateWelcomeScreen', 'employerWelcomeScreen', 
+        'recruiterLoginScreen', 'recruiterDashboard', 'questionnaire', 'resultsView', 
+        'employerQuestionnaire', 'matchingScreen', 'adminQuestionsScreen', 'userManagementScreen'
+    ];
+    
     screens.forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-            element.classList.add('hidden');
-        }
+        if (element) element.classList.add('hidden');
     });
     
     const targetElement = document.getElementById(screenId);
-    if (targetElement) {
-        targetElement.classList.remove('hidden');
-    }
+    if (targetElement) targetElement.classList.remove('hidden');
 };
 
 window.showRoleSelection = function() {
@@ -67,118 +69,7 @@ window.showUserManagement = async function() {
 }
 
 // ========================================
-// QUESTIONÁRIO COM CONTADOR DE PROGRESSO
-// ========================================
-
-window.startQuestionnaire = async function(isRecruiter = false) {
-    showScreen('questionnaire');
-    
-    document.getElementById('questionsLoading').classList.remove('hidden');
-    document.getElementById('employeeForm').classList.add('hidden');
-    document.getElementById('submitButton').classList.add('hidden');
-    document.getElementById('statusMessage').classList.add('hidden');
-    updateProgress(0, 10);
-    
-    const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
-    const backForRecruiter = document.getElementById('backFromQuestionnaire');
-    
-    if (isRecruiter) {
-        backForRecruiter.classList.remove('hidden');
-        backForCandidate.classList.add('hidden');
-    } else {
-        backForRecruiter.classList.add('hidden');
-        backForCandidate.classList.remove('hidden');
-    }
-    
-    try {
-        console.log('📥 Tentando buscar perguntas do banco...');
-        const response = await fetch('/.netlify/functions/getRandomQuestions?count=10');
-        
-        if (!response.ok) throw new Error(`API status ${response.status}`);
-        
-        const data = await response.json();
-        currentQuestions = data.questions;
-        console.log('✅ Perguntas do banco:', currentQuestions.length);
-        
-    } catch (error) {
-        console.warn('⚠️ Usando fallback:', error.message);
-        currentQuestions = [...enhancedFallbackQuestions].sort(() => Math.random() - 0.5);
-    }
-    
-    await renderQuestions(currentQuestions);
-    
-    document.getElementById('questionsLoading').classList.add('hidden');
-    document.getElementById('employeeForm').classList.remove('hidden');
-    document.getElementById('submitButton').classList.remove('hidden');
-    
-    document.getElementById('name').value = '';
-    document.getElementById('email').value = '';
-    
-    setupProgressTracking();
-}
-
-function updateProgress(current, total) {
-    const percent = Math.round((current / total) * 100);
-    document.getElementById('progressText').textContent = `Pergunta ${current} de ${total}`;
-    document.getElementById('progressPercent').textContent = `${percent}%`;
-    document.getElementById('progressBar').style.width = `${percent}%`;
-}
-
-function setupProgressTracking() {
-    const sliders = document.querySelectorAll('#dynamicQuestions input[type="range"]');
-    let answered = 0;
-    
-    sliders.forEach(slider => {
-        slider.addEventListener('change', () => {
-            answered = Array.from(sliders).filter(s => s.value !== '3').length;
-            updateProgress(answered + 2, sliders.length + 2);
-        });
-    });
-}
-
-async function renderQuestions(questions) {
-    const container = document.getElementById('dynamicQuestions');
-    container.innerHTML = '';
-    
-    questions.forEach((q, index) => {
-        const questionCard = document.createElement('div');
-        questionCard.className = 'question-card';
-        questionCard.setAttribute('data-question-id', q.id);
-        questionCard.setAttribute('data-category', q.category);
-        questionCard.setAttribute('data-weight', q.weight);
-        
-        questionCard.innerHTML = `
-            <p class="font-semibold text-gray-800 mb-4">
-                ${index + 1}. ${q.text}
-            </p>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
-                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">
-                    ${q.leftLabel}
-                </span>
-                <div class="score-scale w-full">
-                    <input type="range" 
-                           name="q${index}" 
-                           id="q${index}" 
-                           min="1" 
-                           max="5" 
-                           value="3" 
-                           class="w-full"
-                           data-category="${q.category}"
-                           data-weight="${q.weight}"
-                           data-mapping="${q.mapping || 'innovationVsExecution'}">
-                </div>
-                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">
-                    ${q.rightLabel}
-                </span>
-            </div>
-        `;
-        
-        container.appendChild(questionCard);
-    });
-}
-
-// ========================================
-// PERGUNTAS FALLBACK APRIMORADAS
+// PERGUNTAS FALLBACK
 // ========================================
 
 const enhancedFallbackQuestions = [
@@ -275,15 +166,121 @@ const enhancedFallbackQuestions = [
 ];
 
 // ========================================
-// SUBMISSÃO DE RESULTADOS (INTEGRADA)
+// QUESTIONÁRIO DO COLABORADOR
 // ========================================
+
+window.startQuestionnaire = async function(isRecruiter = false) {
+    showScreen('questionnaire');
+    
+    document.getElementById('questionsLoading').classList.remove('hidden');
+    document.getElementById('employeeForm').classList.add('hidden');
+    document.getElementById('submitButton').classList.add('hidden');
+    document.getElementById('statusMessage').classList.add('hidden');
+    updateProgress(0, 10);
+    
+    const backForCandidate = document.getElementById('backFromQuestionnaireForCandidate');
+    const backForRecruiter = document.getElementById('backFromQuestionnaire');
+    
+    if (isRecruiter) {
+        backForRecruiter.classList.remove('hidden');
+        backForCandidate.classList.add('hidden');
+    } else {
+        backForRecruiter.classList.add('hidden');
+        backForCandidate.classList.remove('hidden');
+    }
+    
+    try {
+        console.log('📥 Buscando perguntas do banco...');
+        const response = await fetch('/.netlify/functions/getRandomQuestions?count=10');
+        
+        if (!response.ok) throw new Error(`API status ${response.status}`);
+        
+        const data = await response.json();
+        currentQuestions = data.questions;
+        console.log('✅ Perguntas carregadas:', currentQuestions.length);
+        
+    } catch (error) {
+        console.warn('⚠️ Usando fallback:', error.message);
+        currentQuestions = [...enhancedFallbackQuestions].sort(() => Math.random() - 0.5);
+    }
+    
+    await renderQuestions(currentQuestions);
+    
+    document.getElementById('questionsLoading').classList.add('hidden');
+    document.getElementById('employeeForm').classList.remove('hidden');
+    document.getElementById('submitButton').classList.remove('hidden');
+    
+    document.getElementById('name').value = '';
+    document.getElementById('email').value = '';
+    
+    setupProgressTracking();
+}
+
+function updateProgress(current, total) {
+    const percent = Math.round((current / total) * 100);
+    document.getElementById('progressText').textContent = `Pergunta ${current} de ${total}`;
+    document.getElementById('progressPercent').textContent = `${percent}%`;
+    document.getElementById('progressBar').style.width = `${percent}%`;
+}
+
+function setupProgressTracking() {
+    const sliders = document.querySelectorAll('#dynamicQuestions input[type="range"]');
+    
+    sliders.forEach(slider => {
+        slider.addEventListener('change', () => {
+            const answered = Array.from(sliders).filter(s => s.value !== '3').length;
+            updateProgress(answered + 2, sliders.length + 2);
+        });
+    });
+}
+
+async function renderQuestions(questions) {
+    const container = document.getElementById('dynamicQuestions');
+    container.innerHTML = '';
+    
+    questions.forEach((q, index) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+        questionCard.setAttribute('data-question-id', q.id);
+        questionCard.setAttribute('data-category', q.category);
+        questionCard.setAttribute('data-weight', q.weight);
+        
+        questionCard.innerHTML = `
+            <p class="font-semibold text-gray-800 mb-4">
+                ${index + 1}. ${q.text}
+            </p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4">
+                <span class="text-sm text-gray-500 mb-2 sm:mb-0 text-center sm:text-left w-full sm:w-auto">
+                    ${q.leftLabel}
+                </span>
+                <div class="score-scale w-full">
+                    <input type="range" 
+                           name="q${index}" 
+                           id="q${index}" 
+                           min="1" 
+                           max="5" 
+                           value="3" 
+                           class="w-full"
+                           data-category="${q.category}"
+                           data-weight="${q.weight}"
+                           data-mapping="${q.mapping || 'innovationVsExecution'}">
+                </div>
+                <span class="text-sm text-gray-500 mt-2 sm:mt-0 text-center sm:text-right w-full sm:w-auto">
+                    ${q.rightLabel}
+                </span>
+            </div>
+        `;
+        
+        container.appendChild(questionCard);
+    });
+}
 
 window.submitResults = async function() {
     const nameInput = document.getElementById('name').value.trim();
     const emailInput = document.getElementById('email').value.trim();
 
     if (!nameInput || !emailInput) {
-        alert("Por favor, preencha seu nome e e-mail antes de continuar.");
+        alert("Por favor, preencha seu nome e e-mail.");
         return;
     }
 
@@ -294,7 +291,7 @@ window.submitResults = async function() {
     }
 
     const submitButton = document.getElementById('submitButton');
-    disableButton(submitButton, 'Analisando seu perfil...');
+    disableButton(submitButton, 'Analisando perfil...');
 
     try {
         const answers = [];
@@ -316,12 +313,10 @@ window.submitResults = async function() {
             });
         });
 
-        // Análise Avançada (se disponível)
         let analysis;
         if (typeof ProfileAnalyzer !== 'undefined') {
             analysis = ProfileAnalyzer.analyzeProfile(answers);
         } else {
-            // Fallback para análise básica
             analysis = basicAnalysis(answers);
         }
         
@@ -329,17 +324,12 @@ window.submitResults = async function() {
             name: nameInput,
             email: emailInput,
             profile: analysis.primaryProfile.name,
-            profileEmoji: analysis.primaryProfile.emoji,
-            secondaryProfile: analysis.secondaryProfile?.name || null,
-            isHybrid: analysis.isHybrid,
-            confidence: analysis.primaryProfile.confidence,
+            profileEmoji: analysis.primaryProfile.emoji || '📊',
             description: generateFullDescription(analysis),
-            dimensionScores: analysis.dimensionScores,
-            softSkills: analysis.softSkills || [],
-            developmentAreas: analysis.developmentAreas || [],
-            culturalFit: analysis.culturalFit || [],
-            recommendations: analysis.recommendations || {},
-            behavioralAnalysis: analysis.behavioralAnalysis || {},
+            totalScore: analysis.totalScore || 0,
+            inovadorScore: analysis.inovadorScore || 0,
+            executorScore: analysis.executorScore || 0,
+            especialistaScore: analysis.especialistaScore || 0,
             questionIds: currentQuestions.map(q => q.id),
             timestamp: new Date().toISOString()
         };
@@ -350,7 +340,7 @@ window.submitResults = async function() {
             body: JSON.stringify(resultData)
         });
 
-        if (!response.ok) throw new Error('Erro ao salvar resultados');
+        if (!response.ok) throw new Error('Erro ao salvar');
 
         try {
             await fetch('/.netlify/functions/sendResultEmail', {
@@ -359,32 +349,34 @@ window.submitResults = async function() {
                 body: JSON.stringify({
                     email: emailInput,
                     name: nameInput,
-                    analysis: analysis
+                    profile: resultData.profile,
+                    description: resultData.description
                 })
             });
         } catch (emailError) {
             console.warn('Email não enviado:', emailError);
         }
 
-        displayAdvancedResults(nameInput, analysis);
+        displayResults(nameInput, analysis);
         
         document.getElementById('employeeForm').classList.add('hidden');
         submitButton.classList.add('hidden');
 
     } catch (e) {
         console.error("❌ Erro:", e);
-        alert("Houve um erro ao finalizar o questionário: " + e.message);
+        alert("Erro ao finalizar: " + e.message);
         enableButton(submitButton, 'Finalizar Questionário');
     }
 }
 
-// Análise Básica (Fallback)
 function basicAnalysis(answers) {
-    let inovadorScore = 0, executorScore = 0, especialistaScore = 0;
+    let totalScore = 0, inovadorScore = 0, executorScore = 0, especialistaScore = 0;
     
     answers.forEach(answer => {
         const value = answer.value;
         const weight = answer.weight;
+        
+        totalScore += value * weight;
         
         if (answer.category === 'inovador') {
             inovadorScore += value * weight;
@@ -396,51 +388,50 @@ function basicAnalysis(answers) {
     });
     
     const maxScore = Math.max(inovadorScore, executorScore, especialistaScore);
-    let profile, emoji;
+    let profile, emoji, description;
     
     if (maxScore === inovadorScore) {
         profile = "O Inovador";
         emoji = "💡";
+        description = "Você é proativo, criativo e busca constantemente novas soluções.";
     } else if (maxScore === executorScore) {
         profile = "O Executor Estratégico";
         emoji = "⚡";
+        description = "Você é focado, organizado e garante que as tarefas sejam concluídas com excelência.";
     } else {
         profile = "O Especialista Fiel";
         emoji = "🎯";
+        description = "Você é metódico, confiável e se destaca em ambientes estruturados.";
     }
     
     return {
         primaryProfile: {
             name: profile,
             emoji: emoji,
-            matchScore: Math.round((maxScore / (answers.length * 5)) * 100),
-            confidence: 'média',
-            characteristics: [`Você é um profissional ${profile.toLowerCase()}`],
-            strengths: ['Dedicação', 'Foco'],
-            challenges: ['Desenvolver novas habilidades'],
-            idealRoles: ['Diversos cargos'],
-            workEnvironment: { best: 'Ambiente colaborativo', avoid: 'Ambiente caótico' }
+            matchScore: Math.round((maxScore / totalScore) * 100),
+            characteristics: [description],
+            strengths: ['Dedicação', 'Foco', 'Comprometimento'],
+            challenges: ['Desenvolvimento contínuo'],
+            idealRoles: ['Diversos cargos relacionados'],
+            workEnvironment: { 
+                best: 'Ambiente colaborativo e estruturado', 
+                avoid: 'Ambiente excessivamente caótico' 
+            }
         },
         isHybrid: false,
-        secondaryProfile: null,
-        dimensionScores: {
-            innovation: inovadorScore,
-            execution: executorScore
-        },
-        softSkills: [],
-        developmentAreas: [],
-        culturalFit: [],
-        recommendations: { nextSteps: [] },
-        behavioralAnalysis: {}
+        totalScore: totalScore,
+        inovadorScore: inovadorScore,
+        executorScore: executorScore,
+        especialistaScore: especialistaScore
     };
 }
 
 function generateFullDescription(analysis) {
     const primary = analysis.primaryProfile;
-    return `${primary.emoji} **${primary.name}**\n\n${primary.characteristics.join('\n')}`;
+    return `${primary.emoji} ${primary.name}\n\n${primary.characteristics.join('\n')}`;
 }
 
-function displayAdvancedResults(name, analysis) {
+function displayResults(name, analysis) {
     const statusMessage = document.getElementById('statusMessage');
     statusMessage.classList.remove('hidden');
     statusMessage.classList.add('bg-gradient-to-br', 'from-blue-50', 'to-purple-50');
@@ -452,15 +443,13 @@ function displayAdvancedResults(name, analysis) {
             <div class="text-center">
                 <div class="text-6xl mb-4">${primary.emoji}</div>
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">${primary.name}</h2>
-                <div class="flex items-center justify-center gap-2 mb-4 flex-wrap">
-                    <span class="px-4 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                        ${primary.matchScore}% de compatibilidade
-                    </span>
-                </div>
+                <span class="px-4 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                    ${primary.matchScore}% de compatibilidade
+                </span>
             </div>
 
             <div class="bg-white rounded-lg p-4 shadow-sm">
-                <h3 class="font-bold text-lg mb-3">🎯 Características Principais</h3>
+                <h3 class="font-bold text-lg mb-3">🎯 Características</h3>
                 <ul class="space-y-2">
                     ${primary.characteristics.map(char => `
                         <li class="flex items-start gap-2">
@@ -471,8 +460,17 @@ function displayAdvancedResults(name, analysis) {
                 </ul>
             </div>
 
-            <div class="flex flex-col gap-3 pt-4">
-                <button onclick="downloadBasicPDF('${name.replace(/'/g, "\\'")}', '${primary.name}', '${primary.emoji}')" 
+            ${primary.strengths && primary.strengths.length > 0 ? `
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-green-800">💪 Forças</h3>
+                    <ul class="space-y-1">
+                        ${primary.strengths.map(s => `<li class="text-sm">✓ ${s}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+
+            <div class="flex flex-col gap-3">
+                <button onclick="downloadPDF('${name.replace(/'/g, "\\'")}', '${primary.name}', '${primary.emoji}', ${analysis.totalScore || 0}, ${analysis.inovadorScore || 0}, ${analysis.executorScore || 0}, ${analysis.especialistaScore || 0})" 
                         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
                     📄 Baixar PDF
                 </button>
@@ -485,6 +483,19 @@ function displayAdvancedResults(name, analysis) {
     `;
     
     statusMessage.innerHTML = htmlContent;
+}
+
+window.resetQuestionnaire = function() {
+    document.getElementById('employeeForm').classList.add('hidden');
+    document.getElementById('statusMessage').classList.add('hidden');
+    document.getElementById('submitButton').classList.add('hidden');
+    
+    const submitButton = document.getElementById('submitButton');
+    enableButton(submitButton, 'Finalizar Questionário');
+
+    currentQuestions = [];
+    if (isRecruiterProfile) showRecruiterDashboard();
+    else showRoleSelection();
 }
 
 function disableButton(button, text) {
@@ -501,24 +512,11 @@ function enableButton(button, text) {
     button.textContent = text;
 }
 
-window.resetQuestionnaire = function() {
-    document.getElementById('employeeForm').classList.add('hidden');
-    document.getElementById('statusMessage').classList.add('hidden');
-    document.getElementById('submitButton').classList.add('hidden');
-    
-    const submitButton = document.getElementById('submitButton');
-    enableButton(submitButton, 'Finalizar Questionário');
-
-    currentQuestions = [];
-    if (isRecruiterProfile) showRecruiterDashboard();
-    else showRoleSelection();
-}
-
 // ========================================
-// DOWNLOAD PDF BÁSICO
+// DOWNLOAD PDF
 // ========================================
 
-window.downloadBasicPDF = function(name, profile, emoji) {
+window.downloadPDF = function(name, profile, emoji, total, inovador, executor, especialista) {
     const element = document.createElement('div');
     element.style.padding = '40px';
     element.style.fontFamily = 'Arial, sans-serif';
@@ -532,6 +530,10 @@ window.downloadBasicPDF = function(name, profile, emoji) {
         <hr style="margin: 30px 0;">
         <p><strong>Nome:</strong> ${name}</p>
         <p><strong>Perfil:</strong> ${profile}</p>
+        <p><strong>Pontuação Total:</strong> ${total}</p>
+        <p><strong>Inovador:</strong> ${inovador}</p>
+        <p><strong>Executor:</strong> ${executor}</p>
+        <p><strong>Especialista:</strong> ${especialista}</p>
         <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
         <hr style="margin: 30px 0;">
         <p style="text-align: center; color: #6b7280; font-size: 12px;">
@@ -551,7 +553,7 @@ window.downloadBasicPDF = function(name, profile, emoji) {
 }
 
 // ========================================
-// LOGIN DO RECRUTADOR
+// LOGIN RECRUTADOR
 // ========================================
 
 window.loginRecruiter = async function() {
@@ -570,12 +572,12 @@ window.loginRecruiter = async function() {
         if (response.ok) {
             showRecruiterDashboard();
         } else {
-            loginMessage.innerText = 'Credenciais incorretas. Tente novamente.';
+            loginMessage.innerText = 'Credenciais incorretas.';
             loginMessage.classList.remove('hidden');
         }
     } catch (e) {
-        console.error("Erro na autenticação:", e);
-        loginMessage.innerText = 'Erro ao conectar com o servidor.';
+        console.error("Erro:", e);
+        loginMessage.innerText = 'Erro ao conectar.';
         loginMessage.classList.remove('hidden');
     }
 }
@@ -588,32 +590,32 @@ function clearRecruiterCredentials() {
 }
 
 // ========================================
-// DASHBOARD COM GRÁFICOS
+// DASHBOARD E RESULTADOS
 // ========================================
 
 window.viewAllResults = async function() {
     showScreen('resultsView');
     const resultsContainer = document.getElementById('resultsView');
-    resultsContainer.innerHTML = '<div class="container"><h1 class="text-3xl font-bold text-center mb-8">📊 Carregando resultados...</h1></div>';
+    resultsContainer.innerHTML = '<div class="container"><h1 class="text-3xl font-bold text-center mb-8">📊 Carregando...</h1></div>';
 
     try {
         const response = await fetch('/.netlify/functions/getDashboardResults');
-        if (!response.ok) throw new Error('Erro ao buscar dados');
+        if (!response.ok) throw new Error('Erro ao buscar');
 
         const allResults = await response.json();
         const candidateResults = allResults.candidateResults || [];
         const employerResults = allResults.employerResults || [];
 
         resultsContainer.querySelector('.container').innerHTML = `
-            <h1 class="text-3xl font-extrabold text-center text-gray-900 mb-8">📊 Resultados das Avaliações</h1>
+            <h1 class="text-3xl font-bold text-center mb-8">📊 Resultados</h1>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">Distribuição de Perfis (Colaboradores)</h3>
+                    <h3 class="text-lg font-bold mb-4">Colaboradores</h3>
                     <canvas id="candidateProfileChart"></canvas>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">Perfis Desejados (Empregadores)</h3>
+                    <h3 class="text-lg font-bold mb-4">Empregadores</h3>
                     <canvas id="employerProfileChart"></canvas>
                 </div>
             </div>
@@ -629,7 +631,7 @@ window.viewAllResults = async function() {
             </div>
             
             <button onclick="showRecruiterDashboard()" class="mt-4 text-gray-500 hover:text-gray-700">
-                &lt; Voltar ao Dashboard
+                &lt; Voltar
             </button>
         `;
 
@@ -639,7 +641,7 @@ window.viewAllResults = async function() {
 
     } catch (e) {
         console.error("Erro:", e);
-        resultsContainer.innerHTML = '<div class="container"><p class="text-center text-red-500">Erro ao carregar resultados.</p></div>';
+        resultsContainer.innerHTML = '<div class="container"><p class="text-center text-red-500">Erro ao carregar.</p></div>';
     }
 }
 
@@ -647,7 +649,7 @@ function renderCharts(candidates, employers) {
     setTimeout(() => {
         const candidateCtx = document.getElementById('candidateProfileChart');
         if (candidateCtx) {
-            const candidateProfiles = candidates.reduce((acc, c) => {
+            const profiles = candidates.reduce((acc, c) => {
                 acc[c.profile] = (acc[c.profile] || 0) + 1;
                 return acc;
             }, {});
@@ -655,24 +657,18 @@ function renderCharts(candidates, employers) {
             new Chart(candidateCtx, {
                 type: 'pie',
                 data: {
-                    labels: Object.keys(candidateProfiles),
+                    labels: Object.keys(profiles),
                     datasets: [{
-                        data: Object.values(candidateProfiles),
+                        data: Object.values(profiles),
                         backgroundColor: ['#3b82f6', '#f59e0b', '#10b981']
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
                 }
             });
         }
 
         const employerCtx = document.getElementById('employerProfileChart');
         if (employerCtx) {
-            const employerProfiles = employers.reduce((acc, e) => {
+            const profiles = employers.reduce((acc, e) => {
                 acc[e.profile] = (acc[e.profile] || 0) + 1;
                 return acc;
             }, {});
@@ -680,17 +676,11 @@ function renderCharts(candidates, employers) {
             new Chart(employerCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(employerProfiles),
+                    labels: Object.keys(profiles),
                     datasets: [{
-                        data: Object.values(employerProfiles),
+                        data: Object.values(profiles),
                         backgroundColor: ['#8b5cf6', '#ec4899', '#06b6d4']
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
                 }
             });
         }
@@ -702,7 +692,7 @@ function renderCandidateResults(results) {
     if (!container) return;
 
     if (results.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">Nenhum resultado encontrado.</p>';
+        container.innerHTML = '<p class="text-center text-gray-500">Nenhum resultado.</p>';
         return;
     }
 
@@ -712,89 +702,91 @@ function renderCandidateResults(results) {
         const card = document.createElement('div');
         card.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
         card.innerHTML = `
-            <h3 class="font-bold text-lg text-gray-800 mb-2">🏢 ${date}</h3>
-            <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-            <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-            <p class="text-gray-700"><strong>Busca:</strong> <span class="text-purple-600 font-bold">${data.profile}</span></p>
+            <h3 class="font-bold text-lg mb-2">📋 ${date}</h3>
+            <p><strong>Nome:</strong> ${data.name}</p>
+            <p><strong>Email:</strong> ${data.email}</p>
+            <p><strong>Perfil:</strong> <span class="text-blue-600 font-bold">${data.profile}</span></p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderEmployerResults(results) {
+    const container = document.getElementById('employerResultsList');
+    if (!container) return;
+
+    if (results.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">Nenhum resultado.</p>';
+        return;
+    }
+
+    results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    results.forEach(data => {
+        const date = new Date(data.timestamp).toLocaleString('pt-BR');
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
+        card.innerHTML = `
+            <h3 class="font-bold text-lg mb-2">🏢 ${date}</h3>
+            <p><strong>Nome:</strong> ${data.name}</p>
+            <p><strong>Email:</strong> ${data.email}</p>
+            <p><strong>Busca:</strong> <span class="text-purple-600 font-bold">${data.profile}</span></p>
         `;
         container.appendChild(card);
     });
 }
 
 // ========================================
-// SISTEMA DE MATCHING
+// MATCHING
 // ========================================
 
 window.loadMatchingData = async function() {
     const container = document.getElementById('matchingResults');
-    container.innerHTML = '<p class="text-center">Carregando dados...</p>';
+    container.innerHTML = '<p class="text-center">Carregando...</p>';
 
     try {
         const response = await fetch('/.netlify/functions/getDashboardResults');
-        if (!response.ok) throw new Error('Erro ao buscar dados');
+        if (!response.ok) throw new Error('Erro ao buscar');
 
         const allResults = await response.json();
         const candidates = allResults.candidateResults || [];
         const employers = allResults.employerResults || [];
 
         if (candidates.length === 0 || employers.length === 0) {
-            container.innerHTML = `
-                <div class="bg-yellow-50 p-6 rounded-lg text-center">
-                    <p class="text-gray-700">
-                        ${candidates.length === 0 ? '❌ Nenhum colaborador cadastrado.' : ''}
-                        ${employers.length === 0 ? '❌ Nenhum empregador cadastrado.' : ''}
-                    </p>
-                </div>
-            `;
+            container.innerHTML = '<div class="bg-yellow-50 p-6 rounded-lg text-center"><p>Sem dados suficientes para matching.</p></div>';
             return;
         }
 
         const matches = [];
         employers.forEach(employer => {
             candidates.forEach(candidate => {
-                const compatibility = calculateCompatibility(candidate, employer);
-                matches.push({
-                    candidate: candidate,
-                    employer: employer,
-                    score: compatibility
-                });
+                const score = calculateCompatibility(candidate, employer);
+                matches.push({ candidate, employer, score });
             });
         });
 
         matches.sort((a, b) => b.score - a.score);
-
         container.innerHTML = '';
-        
-        if (matches.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500">Nenhum match encontrado.</p>';
-            return;
-        }
 
         matches.slice(0, 20).forEach(match => {
             const card = document.createElement('div');
-            const scoreColor = match.score >= 80 ? 'green' : match.score >= 60 ? 'yellow' : 'red';
             const borderColor = match.score >= 80 ? 'border-green-500' : match.score >= 60 ? 'border-yellow-500' : 'border-red-500';
             
             card.className = `bg-white p-6 rounded-lg shadow-sm border-l-4 ${borderColor} mb-4`;
             card.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div>
-                        <h3 class="font-bold text-lg text-gray-900">${match.candidate.name}</h3>
+                        <h3 class="font-bold">${match.candidate.name}</h3>
                         <p class="text-sm text-gray-600">${match.candidate.email}</p>
-                        <p class="text-blue-600 font-semibold mt-1">${match.candidate.profile}</p>
+                        <p class="text-blue-600 font-semibold">${match.candidate.profile}</p>
                     </div>
-                    
                     <div class="text-center">
-                        <div class="text-4xl font-bold text-${scoreColor}-600">
-                            ${match.score}%
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Compatibilidade</p>
+                        <div class="text-4xl font-bold">${match.score}%</div>
+                        <p class="text-xs text-gray-500">Compatibilidade</p>
                     </div>
-                    
                     <div class="text-right">
-                        <h3 class="font-bold text-lg text-gray-900">${match.employer.name}</h3>
+                        <h3 class="font-bold">${match.employer.name}</h3>
                         <p class="text-sm text-gray-600">${match.employer.email}</p>
-                        <p class="text-purple-600 font-semibold mt-1">${match.employer.profile}</p>
+                        <p class="text-purple-600 font-semibold">${match.employer.profile}</p>
                     </div>
                 </div>
             `;
@@ -802,39 +794,34 @@ window.loadMatchingData = async function() {
         });
 
     } catch (e) {
-        console.error("Erro no matching:", e);
-        container.innerHTML = `<p class="text-center text-red-500">Erro: ${e.message}</p>`;
+        console.error("Erro:", e);
+        container.innerHTML = '<p class="text-center text-red-500">Erro ao carregar.</p>';
     }
 }
 
 function calculateCompatibility(candidate, employer) {
-    const maxScore = 100;
+    const candInovador = Math.min(100, (candidate.inovadorScore || 0) / 50 * 100);
+    const candExecutor = Math.min(100, (candidate.executorScore || 0) / 50 * 100);
+    const empInovador = Math.min(100, (employer.inovadorScore || 0) / 50 * 100);
+    const empExecutor = Math.min(100, (employer.executorScore || 0) / 50 * 100);
     
-    const candidateInovador = Math.min(100, (candidate.inovadorScore || 0) / 50 * 100);
-    const candidateExecutor = Math.min(100, (candidate.executorScore || 0) / 50 * 100);
+    const diffInovador = Math.abs(candInovador - empInovador);
+    const diffExecutor = Math.abs(candExecutor - empExecutor);
     
-    const employerInovador = Math.min(100, (employer.inovadorScore || 0) / 50 * 100);
-    const employerExecutor = Math.min(100, (employer.executorScore || 0) / 50 * 100);
-    
-    const diffInovador = Math.abs(candidateInovador - employerInovador);
-    const diffExecutor = Math.abs(candidateExecutor - employerExecutor);
-    
-    const compatibility = 100 - ((diffInovador + diffExecutor) / 2);
-    
-    return Math.max(0, Math.min(100, Math.round(compatibility)));
+    return Math.max(0, Math.min(100, Math.round(100 - ((diffInovador + diffExecutor) / 2))));
 }
 
 // ========================================
-// ADMIN DE PERGUNTAS
+// ADMIN PERGUNTAS
 // ========================================
 
 window.loadAdminQuestions = async function() {
     const container = document.getElementById('questionsAdminList');
-    container.innerHTML = '<p class="text-center">Carregando perguntas...</p>';
+    container.innerHTML = '<p class="text-center">Carregando...</p>';
 
     try {
         const response = await fetch('/.netlify/functions/getAllQuestions');
-        if (!response.ok) throw new Error('Erro ao buscar perguntas');
+        if (!response.ok) throw new Error('Erro');
 
         const data = await response.json();
         const questions = data.questions || [];
@@ -853,26 +840,21 @@ window.loadAdminQuestions = async function() {
             card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <p class="font-bold text-gray-800">${q.question_text}</p>
+                        <p class="font-bold">${q.question_text}</p>
                         <p class="text-sm text-gray-600 mt-1">
-                            <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">${q.category}</span>
-                            <span class="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded mr-2">Peso: ${q.weight}</span>
-                            <span class="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded">${q.difficulty}</span>
+                            <span class="bg-blue-100 px-2 py-1 rounded mr-2">${q.category}</span>
+                            <span class="bg-gray-100 px-2 py-1 rounded">Peso: ${q.weight}</span>
                         </p>
                     </div>
                     <div class="flex space-x-2">
                         <button onclick="toggleQuestionStatus('${q.id}', ${q.active})" 
-                                class="px-3 py-1 rounded ${q.active ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white text-sm">
-                            ${q.active ? '⏸ Desativar' : '▶️ Ativar'}
+                                class="px-3 py-1 rounded ${q.active ? 'bg-yellow-500' : 'bg-green-500'} text-white text-sm">
+                            ${q.active ? '⏸' : '▶️'}
                         </button>
                         <button onclick="editQuestion('${q.id}')" 
-                                class="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-sm">
-                            ✏️ Editar
-                        </button>
+                                class="px-3 py-1 rounded bg-blue-500 text-white text-sm">✏️</button>
                         <button onclick="deleteQuestion('${q.id}')" 
-                                class="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-sm">
-                            🗑️ Deletar
-                        </button>
+                                class="px-3 py-1 rounded bg-red-500 text-white text-sm">🗑️</button>
                     </div>
                 </div>
             `;
@@ -881,19 +863,14 @@ window.loadAdminQuestions = async function() {
 
     } catch (e) {
         console.error("Erro:", e);
-        container.innerHTML = '<p class="text-center text-red-500">Erro ao carregar perguntas.</p>';
+        container.innerHTML = '<p class="text-center text-red-500">Erro.</p>';
     }
 }
 
 window.showAddQuestionModal = function() {
     currentEditingQuestionId = null;
     document.getElementById('modalTitle').textContent = 'Nova Pergunta';
-    document.getElementById('modalQuestionText').value = '';
-    document.getElementById('modalLeftLabel').value = '';
-    document.getElementById('modalRightLabel').value = '';
-    document.getElementById('modalCategory').value = 'inovador';
-    document.getElementById('modalWeight').value = '2';
-    document.getElementById('modalDifficulty').value = 'medium';
+    document.getElementById('questionForm').reset();
     document.getElementById('questionModal').style.display = 'flex';
 }
 
@@ -920,56 +897,44 @@ window.editQuestion = async function(id) {
         document.getElementById('modalCategory').value = question.category || 'geral';
         document.getElementById('modalWeight').value = question.weight || 1;
         document.getElementById('modalDifficulty').value = question.difficulty || 'medium';
-        
         document.getElementById('questionModal').style.display = 'flex';
 
     } catch (error) {
-        alert('Erro ao carregar pergunta: ' + error.message);
+        alert('Erro: ' + error.message);
     }
 }
 
 window.toggleQuestionStatus = async function(id, currentStatus) {
     try {
-        const newStatus = !currentStatus;
-        const response = await fetch(`/.netlify/functions/toggleQuestion?id=${id}&active=${newStatus}`, {
+        const response = await fetch(`/.netlify/functions/toggleQuestion?id=${id}&active=${!currentStatus}`, {
             method: 'POST'
         });
-
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'Erro ao alterar status');
-
+        if (!response.ok) throw new Error('Erro');
         await loadAdminQuestions();
     } catch (error) {
-        alert('❌ Erro ao alterar status: ' + error.message);
+        alert('Erro: ' + error.message);
     }
 }
 
 window.deleteQuestion = async function(id) {
-    if (!confirm('Tem certeza que deseja deletar esta pergunta?')) return;
-
+    if (!confirm('Deletar esta pergunta?')) return;
     try {
-        const response = await fetch(`/.netlify/functions/deleteQuestion?id=${id}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Erro ao deletar');
-
+        const response = await fetch(`/.netlify/functions/deleteQuestion?id=${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro');
         loadAdminQuestions();
     } catch (e) {
-        console.error("Erro:", e);
-        alert('Erro ao deletar pergunta');
+        alert('Erro ao deletar');
     }
 }
 
 // ========================================
-// QUESTIONÁRIO DO EMPREGADOR
+// QUESTIONÁRIO EMPREGADOR
 // ========================================
 
 window.startEmployerQuestionnaire = function() {
     showScreen('employerQuestionnaire');
-    const employerForm = document.getElementById('employerForm');
-    if (employerForm) employerForm.reset();
+    const form = document.getElementById('employerForm');
+    if (form) form.reset();
 }
 
 window.submitEmployerResults = async function() {
@@ -977,13 +942,7 @@ window.submitEmployerResults = async function() {
     const emailInput = document.getElementById('employerEmail').value.trim();
 
     if (!nameInput || !emailInput) {
-        alert("Por favor, preencha seu nome e e-mail.");
-        return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailInput)) {
-        alert("Por favor, insira um e-mail válido.");
+        alert("Preencha nome e email.");
         return;
     }
 
@@ -1002,10 +961,8 @@ window.submitEmployerResults = async function() {
         executorScore += (6 - value);
     }
 
-    let profile = "";
-    if (inovadorScore > executorScore) profile = "Busca Inovadores";
-    else if (executorScore > inovadorScore) profile = "Busca Executores";
-    else profile = "Busca Perfil Equilibrado";
+    let profile = inovadorScore > executorScore ? "Busca Inovadores" : 
+                  executorScore > inovadorScore ? "Busca Executores" : "Busca Perfil Equilibrado";
 
     try {
         const response = await fetch('/.netlify/functions/saveEmployerResult', {
@@ -1020,15 +977,14 @@ window.submitEmployerResults = async function() {
             })
         });
 
-        if (!response.ok) throw new Error('Erro ao salvar');
+        if (!response.ok) throw new Error('Erro');
 
         const statusMessage = document.getElementById('statusEmployerMessage');
         statusMessage.classList.remove('hidden');
-        statusMessage.classList.add('bg-green-100', 'text-green-800');
         statusMessage.innerHTML = `
-            <p class="font-bold">✅ Questionário finalizado!</p>
+            <p class="font-bold">✅ Finalizado!</p>
             <p><strong>Perfil:</strong> ${profile}</p>
-            <button onclick="resetEmployerQuestionnaire()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mt-4">Voltar</button>
+            <button onclick="resetEmployerQuestionnaire()" class="w-full bg-blue-600 text-white py-2 rounded-lg mt-4">Voltar</button>
         `;
         form.classList.add('hidden');
         submitButton.classList.add('hidden');
@@ -1036,7 +992,7 @@ window.submitEmployerResults = async function() {
     } catch (e) {
         alert("Erro: " + e.message);
         submitButton.disabled = false;
-        submitButton.textContent = 'Finalizar Questionário';
+        submitButton.textContent = 'Finalizar';
     }
 }
 
@@ -1046,45 +1002,39 @@ window.resetEmployerQuestionnaire = function() {
     document.getElementById('statusEmployerMessage').classList.add('hidden');
     document.getElementById('submitEmployerButton').classList.remove('hidden');
     document.getElementById('submitEmployerButton').disabled = false;
-    document.getElementById('submitEmployerButton').textContent = 'Finalizar Questionário';
     showRoleSelection();
 }
 
 // ========================================
-// GERENCIAMENTO DE USUÁRIOS
+// GERENCIAMENTO USUÁRIOS
 // ========================================
 
 window.loadRecruiters = async function() {
     const container = document.getElementById('recruitersList');
-    container.innerHTML = '<p class="text-center text-gray-500">Carregando...</p>';
+    container.innerHTML = '<p class="text-center">Carregando...</p>';
 
     try {
         const response = await fetch('/.netlify/functions/listRecruiters');
         const data = await response.json();
-
         if (!response.ok) throw new Error(data.error);
 
         const recruiters = data.recruiters || [];
 
         if (recruiters.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500">Nenhum recrutador cadastrado.</p>';
+            container.innerHTML = '<p class="text-center text-gray-500">Nenhum recrutador.</p>';
             return;
         }
 
         container.innerHTML = '';
-        recruiters.forEach(recruiter => {
+        recruiters.forEach(rec => {
             const card = document.createElement('div');
             card.className = 'border-b py-4 flex justify-between items-center';
             card.innerHTML = `
                 <div>
-                    <p class="font-bold text-gray-800">${recruiter.name}</p>
-                    <p class="text-sm text-gray-600">${recruiter.email}</p>
-                    ${recruiter.company ? `<p class="text-xs text-gray-500">${recruiter.company}</p>` : ''}
+                    <p class="font-bold">${rec.name}</p>
+                    <p class="text-sm text-gray-600">${rec.email}</p>
                 </div>
-                <button onclick="deleteRecruiter('${recruiter.id}')" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                    🗑️ Deletar
-                </button>
+                <button onclick="deleteRecruiter('${rec.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">🗑️</button>
             `;
             container.appendChild(card);
         });
@@ -1095,20 +1045,13 @@ window.loadRecruiters = async function() {
 }
 
 window.deleteRecruiter = async function(id) {
-    if (!confirm('Tem certeza que deseja deletar este recrutador?')) return;
-
+    if (!confirm('Deletar recrutador?')) return;
     try {
-        const response = await fetch(`/.netlify/functions/deleteRecruiter?id=${id}`, {
-            method: 'DELETE'
-        });
-
+        const response = await fetch(`/.netlify/functions/deleteRecruiter?id=${id}`, { method: 'DELETE' });
         const data = await response.json();
-
         if (!response.ok) throw new Error(data.error);
-
-        alert('✅ Recrutador deletado com sucesso!');
+        alert('✅ Deletado!');
         await loadRecruiters();
-
     } catch (error) {
         alert('❌ Erro: ' + error.message);
     }
@@ -1119,15 +1062,13 @@ window.deleteRecruiter = async function(id) {
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar na tela de seleção
+    console.log('✅ Script carregado!');
     showScreen('roleSelectionScreen');
     
-    // Form de novo recrutador
     const newRecruiterForm = document.getElementById('newRecruiterForm');
     if (newRecruiterForm) {
         newRecruiterForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Criando...';
@@ -1144,14 +1085,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error);
-
-                alert('✅ Recrutador criado com sucesso!');
+                if (!response.ok) throw new Error('Erro');
+                alert('✅ Criado!');
                 e.target.reset();
                 await loadRecruiters();
-
             } catch (error) {
                 alert('❌ Erro: ' + error.message);
             } finally {
@@ -1161,14 +1098,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form de perguntas
     const questionForm = document.getElementById('questionForm');
     if (questionForm) {
         questionForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Salvando...';
 
@@ -1193,282 +1127,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(questionData)
                 });
 
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error || 'Erro ao salvar');
-
-                alert('✅ Pergunta salva com sucesso!');
+                if (!response.ok) throw new Error('Erro');
+                alert('✅ Salvo!');
                 closeQuestionModal();
                 await loadAdminQuestions();
-
             } catch (error) {
                 alert('❌ Erro: ' + error.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.textContent = 'Salvar';
             }
         });
     }
 });
 
-// ========================================
-// FUNÇÕES AUXILIARES ADICIONAIS
-// ========================================
-
 window.showModal = function(message) {
     alert(message);
 }
 
-// Função para compartilhar resultados (caso seja implementada)
-window.shareResults = function() {
-    const shareData = {
-        title: 'Meu Perfil Profissional - Conecta RH',
-        text: 'Acabei de descobrir meu perfil profissional! Faça você também.',
-        url: window.location.href
-    };
-    
-    if (navigator.share) {
-        navigator.share(shareData).catch(err => console.log('Erro ao compartilhar'));
-    } else {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            alert('Link copiado para a área de transferência!');
-        });
-    }
-}
-
-// ========================================
-// FUNÇÕES AVANÇADAS (SE PROFILEANALYZER DISPONÍVEL)
-// ========================================
-
-// Download PDF Avançado (usado quando ProfileAnalyzer está disponível)
-window.downloadAdvancedPDF = function(name, analysisData) {
-    try {
-        const analysis = typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData;
-        const element = document.createElement('div');
-        element.style.padding = '40px';
-        element.style.fontFamily = 'Arial, sans-serif';
-        element.style.backgroundColor = '#ffffff';
-        
-        const primary = analysis.primaryProfile;
-        
-        element.innerHTML = `
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #1e40af; font-size: 32px; margin-bottom: 10px;">Conecta RH</h1>
-                <h2 style="color: #4b5563; font-size: 24px;">Relatório Completo de Perfil Profissional</h2>
-                <div style="font-size: 48px; margin: 20px 0;">${primary.emoji}</div>
-            </div>
-            
-            <hr style="margin: 30px 0; border: 1px solid #e5e7eb;">
-            
-            <h3 style="color: #1f2937; font-size: 20px; margin-top: 30px;">Dados do Candidato</h3>
-            <p><strong>Nome:</strong> ${name}</p>
-            <p><strong>Data da Análise:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
-            
-            <h3 style="color: ${primary.primaryColor || '#3b82f6'}; font-size: 24px; margin-top: 30px;">
-                ${primary.name}
-            </h3>
-            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-                Compatibilidade: <strong>${primary.matchScore}%</strong>
-            </p>
-            
-            <h4 style="color: #1f2937; margin-top: 20px;">Características Principais:</h4>
-            <ul style="line-height: 1.8;">
-                ${primary.characteristics.map(char => `<li>${char}</li>`).join('')}
-            </ul>
-            
-            ${primary.strengths && primary.strengths.length > 0 ? `
-                <h4 style="color: #10b981; margin-top: 20px;">Forças:</h4>
-                <ul style="line-height: 1.8;">
-                    ${primary.strengths.map(strength => `<li>${strength}</li>`).join('')}
-                </ul>
-            ` : ''}
-            
-            ${primary.challenges && primary.challenges.length > 0 ? `
-                <h4 style="color: #f59e0b; margin-top: 20px;">Pontos de Atenção:</h4>
-                <ul style="line-height: 1.8;">
-                    ${primary.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
-                </ul>
-            ` : ''}
-            
-            ${primary.idealRoles && primary.idealRoles.length > 0 ? `
-                <h3 style="color: #1f2937; margin-top: 30px;">Cargos Ideais:</h3>
-                <p>${primary.idealRoles.join(', ')}</p>
-            ` : ''}
-            
-            ${primary.workEnvironment ? `
-                <h3 style="color: #1f2937; margin-top: 30px;">Ambiente de Trabalho:</h3>
-                <p><strong>Ideal:</strong> ${primary.workEnvironment.best}</p>
-                <p><strong>Evite:</strong> ${primary.workEnvironment.avoid}</p>
-            ` : ''}
-            
-            <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
-            <p style="text-align: center; color: #6b7280; font-size: 12px;">
-                © ${new Date().getFullYear()} Conecta RH - Todos os direitos reservados
-            </p>
-        `;
-        
-        const opt = {
-            margin: 15,
-            filename: `ConectaRH_Perfil_Completo_${name.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        
-        html2pdf().set(opt).from(element).save();
-    } catch (error) {
-        console.error('Erro ao gerar PDF avançado:', error);
-        alert('Erro ao gerar PDF. Usando versão básica...');
-        // Fallback para PDF básico
-        downloadBasicPDF(name, 'Perfil Profissional', '📊');
-    }
-}
-
-// Renderização de barras de dimensões (usado com ProfileAnalyzer)
-function renderDimensionBars(scores) {
-    const dimensions = [
-        { key: 'innovation', name: 'Inovação', icon: '💡' },
-        { key: 'execution', name: 'Execução', icon: '⚡' },
-        { key: 'leadership', name: 'Liderança', icon: '👑' },
-        { key: 'collaboration', name: 'Colaboração', icon: '🤝' },
-        { key: 'adaptability', name: 'Adaptabilidade', icon: '🔄' },
-        { key: 'analytical', name: 'Pensamento Analítico', icon: '🔍' },
-        { key: 'autonomy', name: 'Autonomia', icon: '🎯' },
-        { key: 'structure', name: 'Estruturação', icon: '📋' }
-    ];
-    
-    return dimensions.map(dim => {
-        const score = Math.round(scores[dim.key] || 50);
-        const color = getScoreColor(score);
-        
-        return `
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-sm font-medium text-gray-700">
-                        ${dim.icon} ${dim.name}
-                    </span>
-                    <span class="text-sm font-bold" style="color: ${color}">
-                        ${score}%
-                    </span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="h-3 rounded-full transition-all duration-500" 
-                         style="width: ${score}%; background-color: ${color}">
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Renderização de análise comportamental
-function renderBehavioralAnalysis(analysis) {
-    const aspects = [
-        { key: 'workStyle', name: 'Estilo de Trabalho', icon: '💼' },
-        { key: 'decisionMaking', name: 'Tomada de Decisão', icon: '🤔' },
-        { key: 'teamDynamics', name: 'Dinâmica de Equipe', icon: '👥' },
-        { key: 'stressResponse', name: 'Resposta ao Estresse', icon: '😌' },
-        { key: 'learningStyle', name: 'Estilo de Aprendizagem', icon: '📚' }
-    ];
-    
-    return aspects.map(aspect => {
-        if (!analysis[aspect.key]) return '';
-        return `
-            <div class="border-l-4 border-purple-400 pl-3 py-2">
-                <div class="font-semibold text-gray-800 mb-1">
-                    ${aspect.icon} ${aspect.name}
-                </div>
-                <div class="text-sm text-gray-600">
-                    ${analysis[aspect.key]}
-                </div>
-            </div>
-        `;
-    }).filter(Boolean).join('');
-}
-
-// Funções auxiliares de cores
-function getConfidenceText(confidence) {
-    const texts = {
-        'muito-alta': '⭐⭐⭐⭐⭐ Muito Alta',
-        'alta': '⭐⭐⭐⭐ Alta',
-        'média': '⭐⭐⭐ Média',
-        'media': '⭐⭐⭐ Média',
-        'baixa': '⭐⭐ Baixa'
-    };
-    return texts[confidence] || '⭐⭐⭐ Média';
-}
-
-function getScoreColor(score) {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#3b82f6';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
-}
-
-function getCultureColor(fit) {
-    if (fit >= 80) return '#10b981';
-    if (fit >= 60) return '#3b82f6';
-    if (fit >= 40) return '#f59e0b';
-    return '#6b7280';
-}
-
-// ========================================
-// TRATAMENTO DE ERROS GLOBAL
-// ========================================
-
-window.addEventListener('error', function(event) {
-    console.error('Erro capturado:', event.error);
-    // Não exibir alert para não incomodar o usuário
-});
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Promise rejeitada:', event.reason);
-    // Não exibir alert para não incomodar o usuário
-});
-
-// ========================================
-// LOG DE INICIALIZAÇÃO
-// ========================================
-
-console.log('✅ Conecta RH - Script carregado com sucesso!');
-console.log('📊 Versão: 2.0 - Sistema Completo');
-console.log('🔧 Funções disponíveis:', {
+console.log('✅ Conecta RH carregado!');
+console.log('Funções:', {
     showCandidateWelcome: typeof window.showCandidateWelcome,
     showEmployerWelcome: typeof window.showEmployerWelcome,
-    showRecruiterLogin: typeof window.showRecruiterLogin,
-    showRecruiterDashboard: typeof window.showRecruiterDashboard,
-    startQuestionnaire: typeof window.startQuestionnaire,
-    submitResults: typeof window.submitResults,
-    loginRecruiter: typeof window.loginRecruiter,
-    viewAllResults: typeof window.viewAllResults,
-    showMatchingScreen: typeof window.showMatchingScreen,
-    showAdminQuestions: typeof window.showAdminQuestions,
-    showUserManagement: typeof window.showUserManagement
+    showRecruiterLogin: typeof window.showRecruiterLogin
 });
-
-// ========================================
-// FIM DO SCRIPT
-// ========================================
-
-    results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    results.forEach(data => {
-        const date = new Date(data.timestamp).toLocaleString('pt-BR');
-        const card = document.createElement('div');
-        card.className = 'bg-gray-50 p-6 rounded-lg shadow-sm';
-        card.innerHTML = `
-            <h3 class="font-bold text-lg text-gray-800 mb-2">📋 ${date}</h3>
-            <p class="text-gray-700"><strong>Nome:</strong> ${data.name}</p>
-            <p class="text-gray-700"><strong>E-mail:</strong> ${data.email}</p>
-            <p class="text-gray-700"><strong>Perfil:</strong> <span class="text-blue-600 font-bold">${data.profile}</span></p>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function renderEmployerResults(results) {
-    const container = document.getElementById('employerResultsList');
-    if (!container) return;
-
-    if (results.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">Nenhum resultado encontrado.</p>';
-        return;
